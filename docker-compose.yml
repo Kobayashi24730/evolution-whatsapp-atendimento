@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
-  db:
+  evolution_db:
     image: postgres:15-alpine
-    container_name: evolution_db
     restart: always
+    container_name: evolution_db
     environment:
       POSTGRES_USER: guilherme_admin
       POSTGRES_PASSWORD: root
@@ -13,6 +11,19 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  evolution_client:
+    image: postgres:15-alpine
+    restart: always
+    container_name: evolution_client
+    environment:
+      POSTGRES_USER: guilherme_client
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: evolution_client
+    volumes:
+      - postgres_data_client:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
 
   redis:
     image: redis:latest
@@ -34,7 +45,7 @@ services:
       SERVER_URL: http://localhost:8080
       DATABASE_ENABLED: "true"
       DATABASE_PROVIDER: postgresql
-      DATABASE_CONNECTION_URI: postgresql://user_atendimento:password_secret@db:5432/evolution_automation
+      DATABASE_CONNECTION_URI: postgresql://guilherme_admin:root@db:5432/evolution_automation
 
       CACHE_REDIS_ENABLED: "true"
       CACHE_REDIS_HOST: redis
@@ -44,17 +55,17 @@ services:
 
       AUTHENTICATION_API_KEY: 7996256f-dfb9-4028-9fa3-1ed9a2f8b640
     depends_on:
-      - db
+      - evolution_db
       - redis
 
   nextjs:
     build:
-      context: ./client
+      context: ./client2
     container_name: atendimento_next
     ports:
       - "3000:3000"
     volumes:
-      - ./client:/app
+      - ./client2:/app
       - /app/node_modules
       - /app/.next
     environment:
@@ -63,8 +74,9 @@ services:
       - WATCHPACK_POLLING=true
     command: npm run dev -- --webpack
     depends_on:
-      - db
+      - evolution_client
 
 volumes:
   postgres_data:
+  postgres_data_client:
   redis_data:
