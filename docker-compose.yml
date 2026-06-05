@@ -45,7 +45,7 @@ services:
       SERVER_URL: http://localhost:8080
       DATABASE_ENABLED: "true"
       DATABASE_PROVIDER: postgresql
-      DATABASE_CONNECTION_URI: postgresql://guilherme_admin:root@db:5432/evolution_automation
+      DATABASE_CONNECTION_URI: postgresql://guilherme_admin:root@evolution_db:5432/evolution_automation
 
       CACHE_REDIS_ENABLED: "true"
       CACHE_REDIS_HOST: redis
@@ -70,7 +70,7 @@ services:
       - /app/.next
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://user_atendimento:password_secret@db:5432/evolution_automation
+      - DATABASE_URL=postgresql://guilherme_client:root@evolution_client:5432/evolution_client
       - WATCHPACK_POLLING=true
     command: npm run dev -- --webpack
     depends_on:
