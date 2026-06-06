@@ -1,5 +1,4 @@
 'use client';
-
 import {loginForm, registerForm} from "@/app/api/auth/actions";
 import { useState, useTransition } from "react";
 
@@ -20,7 +19,7 @@ export default function Login() {
                 console.log("result.error", result.error);
                 setError(result.error || "Error inesperado.");
             }
-        })
+        });
     }
 
     return (

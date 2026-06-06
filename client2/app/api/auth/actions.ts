@@ -20,6 +20,7 @@ export async function loginForm(formData: FormData) {
             redirectTo: "/dashboard"
         });
         return { success: true }
+        //^4.24.14
     } catch (error: any) {
         if (error && typeof error === "object" && (error.name === "AuthError" || error.type === "CredentialsSignin")) {
             return { success: false, error: "invalid_credentials" };
