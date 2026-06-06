@@ -1,6 +1,6 @@
 'use client';
 
-import { loginForm } from "@/app/api/auth/actions";
+import {loginForm, registerForm} from "@/app/api/auth/actions";
 import { useState, useTransition } from "react";
 
 export default function Login() {
@@ -11,9 +11,14 @@ export default function Login() {
     const handleSubmit = async (formData: FormData) => {
         setError(null);
         startTransition(async () => {
-            const result = await loginForm(formData);
+            let result;
+            if (typeForm == "login") {
+                result = await loginForm(formData);
+            }
+            result = await registerForm(formData);
             if (result && !result.success) {
-                setError(result.error || "Error inesperado.")
+                console.log("result.error", result.error);
+                setError(result.error || "Error inesperado.");
             }
         })
     }
@@ -43,23 +48,26 @@ export default function Login() {
                 </h1>
 
                 <form action={handleSubmit} className="flex flex-col gap-4">
+                    {typeForm === "register" && (
+                        <input
+                            name="nome"
+                            type="text"
+                            placeholder="Informe seu nome"
+                            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    )}
                     <input
+                        name="email"
                         type="email"
                         placeholder="Informe seu email"
                         className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <input
+                        name="password"
                         type="password"
                         placeholder="Informe sua senha"
                         className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {typeForm === "register" && (
-                        <input
-                            type="password"
-                            placeholder="Confirme sua senha"
-                            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    )}
                     {error && <p className="text-red-500">{error}</p>}
                     <button
                         type="submit"
