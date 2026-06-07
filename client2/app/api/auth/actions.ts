@@ -1,7 +1,7 @@
 'use server';
 import { prisma } from "@/libs/prisma";
 import * as bcrypt from "bcrypt-ts";
-import { signIn } from "@/services/auth";
+import { signIn } from "next-auth/react";
 
 export async function loginForm(formData: FormData) {
     const email = formData.get("email") as string;

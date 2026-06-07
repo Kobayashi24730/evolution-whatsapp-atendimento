@@ -1,18 +1,23 @@
 'use client';
 import {loginForm, registerForm} from "@/app/api/auth/actions";
 import { useState, useTransition } from "react";
+import { signIn } from "next-auth/react";
 
 export default function Login() {
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
     const [typeForm, setTypeForm] = useState("login");
 
-    const handleSubmit = async (formData: FormData) => {
+    const handleSubmit = async (formData) => {
         setError(null);
         startTransition(async () => {
             let result;
             if (typeForm == "login") {
-                result = await loginForm(formData);
+                result = await signIn("credentials", {
+                        email: formData.email,
+                        password: formData.password,
+                        callbackUrl: "/dashboard"
+                    });
             }
             result = await registerForm(formData);
             if (result && !result.success) {
