@@ -60,16 +60,17 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
-
 model User {
   id            String        @id @default(uuid())
-  nome          String
+  nome          String?
   email         String        @unique
   atendimentos  Atendimento[]
   createdAt     DateTime      @default(now())
-  emailVerified DateTime?
+  name          String
+  emailVerified Boolean       @default(false) // Precisa ser Boolean na v1.6+
   image         String?
   password      String?
+
   accounts      Account[]
   sessions      Session[]
 }

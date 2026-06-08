@@ -1,36 +1,33 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { authConfig } from "./auth.config";
-import { prisma } from "../libs/prisma";
-import { compare } from "bcrypt-ts";
+// services/auth.ts
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { prisma } from "@/libs/prisma";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-    ...authConfig,
-    providers: [
-        Credentials({
-            async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null;
+export const auth = betterAuth({
+    database: prismaAdapter(prisma, {
+        provider: "postgresql",
+    }),
+    emailAndPassword: {
+        enabled: true,
+    },
 
-                const user = await prisma.user.findUnique({
-                    where: { email: credentials.email as string },
-                });
-
-                if (!user || !user.password) return null;
-
-                const isPasswordValid = await compare(
-                    credentials.password as string,
-                    user.password
-                );
-
-                if (isPasswordValid) {
+    user: {
+        fields: {
+            name: "nome",
+        },
+    },
+    databaseHooks: {
+        user: {
+            create: {
+                before: async (user) => {
                     return {
-                        id: user.id,
-                        name: user.nome,
-                        email: user.email,
+                        data: {
+                            ...user,
+                            nome: user.name,
+                        },
                     };
-                }
-                return null;
+                },
             },
-        }),
-    ],
+        },
+    },
 });

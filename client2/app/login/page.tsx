@@ -1,31 +1,59 @@
-'use client';
-import {loginForm, registerForm} from "@/app/api/auth/actions";
-import { useState, useTransition } from "react";
-import { signIn } from "next-auth/react";
+"use client";
 
-export default function Login() {
+import { createAuthClient } from "better-auth/react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { registerForm } from "@/app/actions";
+
+export const authClient = createAuthClient({
+    baseURL: process.env.NEXT_PUBLIC_APP_URL
+});
+
+export default function LoginPage() {
+    const router = useRouter();
     const [error, setError] = useState<string | null>(null);
-    const [isPending, startTransition] = useTransition();
+    const [loading, setLoading] = useState(false);
     const [typeForm, setTypeForm] = useState("login");
 
-    const handleSubmit = async (formData) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
         setError(null);
-        startTransition(async () => {
-            let result;
-            if (typeForm == "login") {
-                result = await signIn("credentials", {
-                        email: formData.email,
-                        password: formData.password,
-                        callbackUrl: "/dashboard"
-                    });
+        setLoading(true);
+        const formData = new FormData(event.currentTarget);
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+
+        if (typeForm == "login") {
+            await authClient.signIn.email({
+                email,
+                password,
+                callbackURL: "/dashboard",
+            }, {
+                onRequest: () => {
+                    setLoading(true);
+                },
+                onSuccess: () => {
+                    setLoading(false);
+                    router.push("/dashboard");
+                    router.refresh();
+                },
+                onError: (ctx) => {
+                    setLoading(false);
+                    setError(ctx.error.message || "E-mail ou senha inválidos.");
+                }
+            });
+        } else {
+            const result = await registerForm(formData);
+            console.log(formData.get("nome"), formData.get("email"), formData.get("password"));
+            setLoading(false);
+            if (!result.success) {
+                setError(result.error);
+                return;
             }
-            result = await registerForm(formData);
-            if (result && !result.success) {
-                console.log("result.error", result.error);
-                setError(result.error || "Error inesperado.");
-            }
-        });
-    }
+            router.push("/dashboard");
+            router.refresh();
+        }
+    };
 
     return (
         <main className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -51,7 +79,7 @@ export default function Login() {
                     {typeForm === "login" ? "Login" : "Cadastrar"}
                 </h1>
 
-                <form action={handleSubmit} className="flex flex-col gap-4">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     {typeForm === "register" && (
                         <input
                             name="nome"
