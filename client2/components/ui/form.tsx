@@ -13,7 +13,7 @@ import {
     useFormState,
 } from "react-hook-form"
 
-import { cn } from "@/lib/utils" // Se der erro aqui, mude para "../../lib/utils" conforme sua pasta
+import { cn } from "../../libs/utils" // Se der erro aqui, mude para "../../lib/utils" conforme sua pasta
 
 const Form = FormProvider
 

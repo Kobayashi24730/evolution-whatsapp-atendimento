@@ -1,5 +1,5 @@
 "use client";
-import signIn from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerForm } from "@/app/actions";
@@ -39,25 +39,52 @@ export default function loginForm() {
     });
 
     async function onSubmit (values: FormValues) {
-        try {
-            setLoading(true);
-            const res = await signIn("credentials", {
-                redirect: false,
-                email: values.email,
-                password: values.password,
-            });
-            if (res?.error) {
-                console.log("Erro ", res);
+        if (typeForm === "login"){
+            try {
+                setLoading(true);
+                const res = await signIn("credentials", {
+                    redirect: false,
+                    email: values.email,
+                    password: values.password,
+                });
+                if (res?.error) {
+                    console.log("Erro ", res);
+                    setError("E-mail ou senha inválidos.");
+                } else {
+                    router.refresh();
+                    router.push("/atendimento");
+                }
+            } catch (error) {
                 setError("E-mail ou senha inválidos.");
-            } else {
-                router.push("/atendimento");
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            setError("E-mail ou senha inválidos.");
-        } finally {
-            setLoading(false);
+        } else {
+            try {
+                setLoading(true);
+                const res = await fetch("api/user", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({email: values.email, password: values.password})
+                });
+                const data = res.json();
+                if (!res.ok) {
+                    setError("User register failed");
+                }
+                await signIn("credentials", {
+                    redirect: false,
+                    email: values.email,
+                    password: values.password,
+                });
+                router.refresh();
+                router.push("/atendimento");
+            } catch (error) {
+                setError("Failed to Register user");
+            } finally {
+                setLoading(false);
+            }
         }
-    }
+        }
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
