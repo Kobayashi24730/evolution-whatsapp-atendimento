@@ -1,13 +1,21 @@
-export default async function Atendimentos() {
+"use client";
+import { useState } from "react";
+import ChatCard from "@/components/ChatCard";
+
+export default function Atendimentos() {
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    function onCartNewChat () {
+        setIsOpen(true);
+    }
     return (
         <main className="container mx-auto p-4 h-[calc(100vh-2rem)] flex flex-col gap-6">
             <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Atendimentos</h1>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-all shadow-md shadow-blue-100 active:scale-95">
+                <button onClick={() => onCartNewChat()} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-all shadow-md shadow-blue-100 active:scale-95">
                     + Abrir atendimento
                 </button>
             </div>
-
+            {isOpen && <ChatCard onClose={() => setIsOpen(false)} data={null} />}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 overflow-hidden">
                 <aside className="lg:col-span-4 flex flex-col gap-4 overflow-hidden">
                     <h2 className="text-lg font-bold text-gray-700 px-1">Todos os chats</h2>

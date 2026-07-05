@@ -54,25 +54,25 @@ model Account {
 }
 
 model Session {
-  id           Int    @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   sessionToken String   @unique
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
 model User {
   id            String        @id @default(uuid())
-  nome          String?
+  name          String
   email         String        @unique
   atendimentos  Atendimento[]
   createdAt     DateTime      @default(now())
-  name          String
-  emailVerified Boolean       @default(false) // Precisa ser Boolean na v1.6+
+  emailVerified Boolean       @default(false)
   image         String?
   password      String?
 
-  accounts      Account[]
-  sessions      Session[]
+  accounts Account[]
+  sessions Session[]
 }
 
 model VerificationToken {
