@@ -1,9 +1,27 @@
 "use client";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import ChatCard from "@/components/ChatCard";
 
 export default function Atendimentos() {
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [data, setData] = useState<any[]>([]);
+    console.log(data);
+    useEffect(() => {
+        async function getAtendimentos() {
+            const response = await fetch("api/atendimento", {
+                method: "GET",
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const res = await  response.json();
+            if (res  && Array.isArray(res.data)) {
+                const data = res.data;
+                setData(data);
+            } else {
+                setData([]);
+            }
+        }
+        getAtendimentos();
+    }, []);
     function onCartNewChat () {
         setIsOpen(true);
     }
@@ -21,12 +39,15 @@ export default function Atendimentos() {
                     <h2 className="text-lg font-bold text-gray-700 px-1">Todos os chats</h2>
 
                     <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                        {[1, 2, 3, 4, 5].map((item) => (
-                            <div key={item} className="group flex flex-col gap-2 p-4 bg-white border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
+                        {data.map((atendimento) => (
+                            <div key={atendimento.id} className="group flex flex-col gap-2 p-4 bg-white border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
                                 <div className="flex justify-between items-start">
-                                    <h3 className="font-bold text-gray-800">João Silva #{item}</h3>
-                                    <span className="text-[10px] text-gray-400 font-medium">14:20</span>
+                                    <h3 className="font-bold text-gray-800">{atendimento.clienteNome}</h3>
+                                    <span className="text-[10px] text-gray-400 font-medium">{atendimento.createdAt}</span>
                                 </div>
+                                {atendimento.mensagens[0].message.length > 0 && (
+                                    <p className="text-sm text-gray-500 line-clamp-1 italic">{atendimento.mensagens[0].message}</p>
+                                )}
                                 <p className="text-sm text-gray-500 line-clamp-1 italic">Sem descrição disponível...</p>
                                 <button className="mt-2 text-xs font-bold text-blue-600 group-hover:text-blue-700 uppercase tracking-wider">
                                     Ver chat
