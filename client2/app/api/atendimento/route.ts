@@ -48,3 +48,35 @@ export async function POST(request: Request) {
         }, { status: 500 });
     }
 }
+
+export async function PUT(request: Request) {
+    try {
+        const { mensagens, atendimentoId } = await request.json();
+        if (!mensagens) {
+            return NextResponse.json({ message: "Missing message" }, { status: 400 });
+        }
+        const data = await prisma.atendimento.update({
+            where: {
+                id: atendimentoId
+            }, data: {
+                status: "EM ANDAMENTO",
+                mensagens: {
+                    create: {
+                        texto: mensagens,
+                        fromMe: true
+                    }
+                }
+            },
+            include: {
+                mensagens: true
+            },
+        });
+        return NextResponse.json({ message: "Success to update message", data: data }, { status: 200 });
+    } catch (error) {
+        console.error("Failed to message post, error line: ", error);
+        return NextResponse.json({
+            error: "Internal Serve Error",
+            details: error instanceof Error ? error.message : error
+        }, { status: 500 });
+    }
+}
