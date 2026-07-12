@@ -28,15 +28,15 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const { clienteNumero, clienteNome, userId } = await request.json();
-        if (!clienteNumero || !clienteNome || !userId) {
+        const { clienteNumero, clienteNome, userId, by } = await request.json();
+        if (!clienteNumero || !clienteNome || !userId || by) {
             return NextResponse.json({ message: "Missing clienteNumero, clienteNome or userId" }, { status: 400 })
         }
         const atendimento = await prisma.atendimento.create({
             data: {
                 clienteNumero,
                 clienteNome,
-                userId
+                userId,
             }
         });
         return NextResponse.json({ message: "Success to create atendimento", data: atendimento }, { status: 201 });
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
     try {
-        const { mensagens, atendimentoId } = await request.json();
+        const { mensagens, atendimentoId, by} = await request.json();
         if (!mensagens) {
             return NextResponse.json({ message: "Missing message" }, { status: 400 });
         }
@@ -63,7 +63,7 @@ export async function PUT(request: Request) {
                 mensagens: {
                     create: {
                         texto: mensagens,
-                        fromMe: true
+                        fromMe: Boolean(by)
                     }
                 }
             },

@@ -1,7 +1,7 @@
 "use client";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import ChatCard from "@/components/ChatCard";
-import {useSession} from "next-auth/react";
+import { useSession } from "next-auth/react";
 import "next-auth";
 import "next-auth/jwt";
 
@@ -29,74 +29,93 @@ export default function Atendimentos() {
     const [data, setData] = useState<any[]>([]);
     const [messagem, setMessage] = useState<any[]>([]);
     const [msg, setMsg] = useState<string>("");
-    const getAtendimentoID = data.map((atendimento: any) => atendimento.id);
-    const atendimentoId = getAtendimentoID[0];
-    const atendimentoAtivo = data[0];
-    console.log(messagem);
+    const [idAtendimentoAtivo, setIdAtendimentoAtivo] = useState<string | null>(null);
+    const atendimentoAtivo = data.find(item => item.id === idAtendimentoAtivo) || data[0];
+    useEffect(() => {
+        if (data.length > 0 && !idAtendimentoAtivo) {
+            setIdAtendimentoAtivo(data[0].id);
+        }
+    }, [data, idAtendimentoAtivo]);
+
     async function getAtendimentos() {
-        if (atendimentoAtivo?.id) return;
-        const response = await fetch("api/atendimento", {
-            method: "GET",
-            headers: { 'Content-Type': 'application/json' },
-        });
-        const res = await  response.json();
-        if (res  && Array.isArray(res.data)) {
-            const data = res.data;
-            setData(data);
-        } else {
-            setData([]);
+        try {
+            const response = await fetch("/api/atendimento", {
+                method: "GET",
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const res = await response.json();
+            if (res && Array.isArray(res.data)) {
+                setData(res.data);
+            }
+        } catch (err) {
+            console.error("Erro ao buscar atendimentos:", err);
         }
     }
+
     async function getMessagens() {
-        if (atendimentoAtivo?.id) return;
-        const response = await fetch("api/menssagens", {
-            method: "GET",
-            headers: { 'Content-Type': 'application/json' },
-        });
-        const res = await response.json();
-        if (res && Array.isArray(res.data)) {
-            const data = res.data;
-            setMessage(data);
-        } else {
-            setMessage([]);
+        if (!atendimentoAtivo?.id) return;
+        try {
+            const response = await fetch(`/api/menssagens?atendimentoId=${atendimentoAtivo.id}`, {
+                method: "GET",
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const res = await response.json();
+            if (res && Array.isArray(res.data)) {
+                setMessage(res.data);
+            } else {
+                setMessage([]);
+            }
+        } catch (err) {
+            console.error("Erro ao buscar mensagens:", err);
         }
     }
+
     useEffect(() => {
         getAtendimentos();
-        const intervaloGetAtendimento = setInterval(() => {getAtendimentos();}, 3000);
+        const intervaloGetAtendimento = setInterval(() => {
+            getAtendimentos();
+        }, 4000);
         return () => clearInterval(intervaloGetAtendimento);
     }, []);
+
     useEffect(() => {
         getMessagens();
         const intervalGetMessagesn = setInterval(() => {
             getMessagens();
         }, 3000);
         return () => clearInterval(intervalGetMessagesn);
-    }, [atendimentoAtivo?.id])
+    }, [atendimentoAtivo?.id]);
+
     async function submitInfos() {
         if (!msg.trim() || !atendimentoAtivo?.id) {
-            setError("informe uma mensagem ou selecione um chat");
+            setError("Informe uma mensagem ou selecione um chat");
             return;
         }
         const values = msg;
         setMsg("");
-        const response = await fetch("api/atendimento", {
-            method: "PUT",
-            body: JSON.stringify({ mensagens: values, atendimentoId })
-        });
-        const res = await response.json();
-        getMessagens();
-        return res;
+        setError(null);
+        try {
+            const response = await fetch("/api/atendimento", {
+                method: "PUT",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mensagens: values, atendimentoId: atendimentoAtivo.id, by: true})
+            });
+            await response.json();
+            getMessagens();
+        } catch (err) {
+            console.error("Erro ao enviar mensagem:", err);
+        }
     }
 
     function onCartNewChat () {
         setIsOpen(true);
     }
+
     return (
         <main className="container mx-auto p-4 h-[calc(100vh-2rem)] flex flex-col gap-6">
             <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Atendimentos</h1>
-                <button onClick={() => onCartNewChat()} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-all shadow-md shadow-blue-100 active:scale-95">
+                <button onClick={onCartNewChat} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-all shadow-md shadow-blue-100 active:scale-95">
                     + Abrir atendimento
                 </button>
             </div>
@@ -107,13 +126,21 @@ export default function Atendimentos() {
 
                     <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                         {data.map((atendimento) => (
-                            <div key={atendimento.id} className="group flex flex-col gap-2 p-4 bg-white border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
+                            <div
+                                key={atendimento.id}
+                                onClick={() => setIdAtendimentoAtivo(atendimento.id)}
+                                className={`group flex flex-col gap-2 p-4 bg-white border rounded-xl hover:border-blue-300 hover:shadow-md transition-all cursor-pointer ${
+                                    atendimentoAtivo?.id === atendimento.id ? "border-blue-500 bg-blue-50/20" : "border-gray-100"
+                                }`}
+                            >
                                 <div className="flex justify-between items-start">
-                                    <h3 className="font-bold text-gray-800">{atendimento.clienteNome}</h3>
-                                    <span className="text-[10px] text-gray-400 font-medium">{atendimento.createdAt}</span>
+                                    <h3 className="font-bold text-gray-800">{atendimento.clienteNome || "Sem nome"}</h3>
+                                    <span className="text-[10px] text-gray-400 font-medium">
+                                        {atendimento.createdAt ? new Date(atendimento.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ""}
+                                    </span>
                                 </div>
-                                <p className="text-sm text-gray-500 line-clamp-1 italic">Sem descrição disponível...</p>
-                                <button className="mt-2 text-xs font-bold text-blue-600 group-hover:text-blue-700 uppercase tracking-wider">
+                                <p className="text-sm text-gray-500 line-clamp-1 italic">WhatsApp: {atendimento.clienteNumero}</p>
+                                <button className="mt-2 text-xs font-bold text-blue-600 group-hover:text-blue-700 uppercase tracking-wider text-left">
                                     Ver chat
                                 </button>
                             </div>
@@ -122,70 +149,63 @@ export default function Atendimentos() {
                 </aside>
 
                 <section className="lg:col-span-8 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                    {data.length > 0 ? (
+                    {atendimentoAtivo ? (
                         <>
-                            {(() => {
-                                return (
-                                    <>
-                                        <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
-                                            <div>
-                                                <h2 className="font-bold text-gray-800 text-lg">
-                                                    {atendimentoAtivo.clienteNome || "Cliente sem nome"}
-                                                </h2>
-                                                <p className="text-xs text-gray-500 flex items-center gap-1">
-                                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                                    Status: {atendimentoAtivo.status} | WhatsApp: {atendimentoAtivo.clienteNumero}
-                                                </p>
-                                            </div>
-                                            <button className="text-xs font-bold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
-                                                Finalizar
-                                            </button>
-                                        </div>
+                            <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+                                <div>
+                                    <h2 className="font-bold text-gray-800 text-lg">
+                                        {atendimentoAtivo.clienteNome || "Cliente sem nome"}
+                                    </h2>
+                                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                        Status: {atendimentoAtivo.status} | WhatsApp: {atendimentoAtivo.clienteNumero}
+                                    </p>
+                                </div>
+                                <button className="text-xs font-bold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
+                                    Finalizar
+                                </button>
+                            </div>
 
-                                        <div className="flex-1 p-6 overflow-y-auto bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-50">
-                                            <div className="flex flex-col gap-4">
-                                                {messagem.length > 0 ? (
-                                                    messagem.map((msg: any) => (
-                                                        <div
-                                                            key={msg.id}
-                                                            className={`max-w-[80%] p-3 rounded-2xl shadow-sm ${
-                                                                msg.fromMe
-                                                                    ? "bg-blue-600 text-white self-end rounded-tr-none"
-                                                                    : "bg-white text-gray-700 self-start border border-gray-100 rounded-tl-none"
-                                                            }`}
-                                                        >
-                                                            <p className="text-sm">{msg.texto}</p>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <>
-                                                        <div className="max-w-[80%] bg-white p-3 rounded-2xl rounded-tl-none shadow-sm self-start border border-gray-100">
-                                                            <p className="text-sm text-gray-700">Olá, gostaria de saber o status do meu pedido!</p>
-                                                        </div>
-                                                        <div className="max-w-[80%] bg-blue-600 p-3 rounded-2xl rounded-tr-none shadow-sm self-end text-white">
-                                                            <p className="text-sm">Claro! Poderia me informar o CPF?</p>
-                                                        </div>
-                                                    </>
-                                                )}
+                            <div className="flex-1 p-6 overflow-y-auto bg-slate-50">
+                                <div className="flex flex-col gap-4">
+                                    {messagem.length > 0 ? (
+                                        messagem.map((msg: any) => (
+                                            <div
+                                                key={msg.id}
+                                                className={`max-w-[80%] p-3 rounded-2xl shadow-sm ${
+                                                    msg.fromMe
+                                                        ? "bg-blue-600 text-white self-end rounded-tr-none"
+                                                        : "bg-white text-gray-700 self-start border border-gray-100 rounded-tl-none"
+                                                }`}
+                                            >
+                                                {!msg.fromMe ? <p>{data.filter((msg: any) => msg.id === msg.id)[0].clienteNome}</p> : <p>Voce</p>}
+                                                <p className="text-sm">{msg.texto}</p>
                                             </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center p-4 text-gray-400 text-sm italic">
+                                            Nenhuma mensagem por enquanto...
                                         </div>
+                                    )}
+                                </div>
+                            </div>
 
-                                        <div className="p-4 border-t bg-white">
-                                            <div className="flex gap-2 p-2 bg-gray-100 rounded-xl focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Digite sua mensagem..."
-                                                    className="flex-1 bg-transparent outline-none px-2 text-sm text-gray-700"
-                                                    onChange={(e) => setMsg(e.target.value)}
-                                                />
-                                                <button onClick={() => submitInfos(msg)} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition">
-                                                    Enviar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </>
-                                );
-                            })()}
+                            <div className="p-4 border-t bg-white">
+                                {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
+                                <div className="flex gap-2 p-2 bg-gray-100 rounded-xl focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                                    <input
+                                        type="text"
+                                        placeholder="Digite sua mensagem..."
+                                        value={msg}
+                                        className="flex-1 bg-transparent outline-none px-2 text-sm text-gray-700"
+                                        onChange={(e) => setMsg(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && submitInfos()}
+                                    />
+                                    <button onClick={submitInfos} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition">
+                                        Enviar
+                                    </button>
+                                </div>
+                            </div>
                         </>
                     ) : (
                         <div className="flex-1 flex items-center justify-center p-4">
@@ -195,5 +215,5 @@ export default function Atendimentos() {
                 </section>
             </div>
         </main>
-    )
+    );
 }
