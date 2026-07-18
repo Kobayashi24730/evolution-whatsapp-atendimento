@@ -2,14 +2,29 @@
 import Link from "next/link";
 import { Menu, Search, LogIn } from 'lucide-react';
 import { useSession } from "next-auth/react";
+import LoginForm from "@/app/login/page";
+import {useEffect} from "react";
+import {usePathname, useRouter} from "next/navigation";
 
 export default function Header() {
     const { data: session, status } = useSession();
+    const router = useRouter();
+    const pathname = usePathname();
+    useEffect(() => {
+        if (status === "loading") return;
+        if (status === "unauthenticated" && pathname !== "\login") {
+            router.push("/login");
+        }
+    }, [status, pathname]);
+
+    if (status === "loading") {
+        return <div className="h-16 w-full bg-white border-b flex items-center justify-center text-sm">Carregando...</div>;
+    }
     return (
         <header className="w-full border-b bg-white sticky top-0 z-50">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/dashboard" className="text-2xl font-bold text-blue-600">
-                    Meu sistema
+                <Link href="/atendimento" className="text-2xl font-bold text-blue-600">
+                    NEX Atendimento
                 </Link>
 
                 <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
@@ -19,7 +34,6 @@ export default function Header() {
                             <span className="text-primary-foreground text-xs font-semibold">{session?.user?.email ? session.user.email .charAt(0).toUpperCase() : "U"}</span>
                         </div>
                         <div className="hidden lg:block">
-                            {status === "loading" && (<span>Carregando...</span>)}
                             {status === "authenticated" && (<span>Logado</span>)}
                             {status === "unauthenticated" && (<span>Deslogado</span>)}
                         </div>

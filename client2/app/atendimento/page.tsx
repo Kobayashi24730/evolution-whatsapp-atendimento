@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Menu, Search, LogIn } from "lucide-react";
 import ChatCard from "@/components/ChatCard";
 import { useSession } from "next-auth/react";
 import "next-auth";
@@ -107,17 +108,46 @@ export default function Atendimentos() {
         }
     }
 
+    async function finalizarAtendimento(id: any) {
+        try {
+            const response = await fetch("/api/finalizar", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ atendimentoId: id })
+            });
+            if(!response.ok) {
+                const error = await response.text();
+                setError(error);
+                return;
+            }
+            const data = await response.json();
+            if (data.success) {
+                console.log("Atendimento finalizado com sucesso");
+            }
+            getAtendimentos();
+        } catch (err) {
+            console.error("Erro ao finalizar atendimento:", err);
+        }
+    }
+
     function onCartNewChat () {
         setIsOpen(true);
     }
 
     return (
         <main className="container mx-auto p-4 h-[calc(100vh-2rem)] flex flex-col gap-6">
-            <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Atendimentos</h1>
-                <button onClick={onCartNewChat} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-6 rounded-lg transition-all shadow-md shadow-blue-100 active:scale-95">
-                    + Abrir atendimento
-                </button>
+            <div className="flex flex-col gap-4 w-full">
+                <div className="flex items-center gap-2 justify-end px-2">
+                    <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Buscar 1">
+                        <Search size={20} />
+                    </button>
+                    <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Buscar 2">
+                        <Menu size={20} />
+                    </button>
+                    <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Buscar 3">
+                        <LogIn size={20} />
+                    </button>
+                </div>
             </div>
             {isOpen && <ChatCard onClose={() => setIsOpen(false)} data={null} />}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 overflow-hidden">
@@ -161,7 +191,7 @@ export default function Atendimentos() {
                                         Status: {atendimentoAtivo.status} | WhatsApp: {atendimentoAtivo.clienteNumero}
                                     </p>
                                 </div>
-                                <button className="text-xs font-bold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
+                                <button onClick={() => finalizarAtendimento(atendimentoAtivo.id)} className="text-xs font-bold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
                                     Finalizar
                                 </button>
                             </div>

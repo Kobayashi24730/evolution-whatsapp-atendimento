@@ -41,6 +41,8 @@ services:
     restart: always
     ports:
       - "8080:8080"
+    networks:
+      - nex_netwoks
     environment:
       SERVER_URL: http://localhost:8080
       DATABASE_ENABLED: "true"
@@ -62,6 +64,8 @@ services:
     build:
       context: ./client2
     container_name: atendimento_next
+    networks:
+      - nex_netwoks
     ports:
       - "3000:3000"
     volumes:
