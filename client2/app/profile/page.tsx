@@ -1,12 +1,18 @@
-"use client"; // Não esqueça de garantir o 'use client' por causa do useSession()
+"use client";
 
 import { useSession } from "next-auth/react";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Profile() {
     const { data: session } = useSession();
+    const router = useRouter()
 
     return (
         <section className="max-w-2xl mx-auto p-6 bg-white border border-gray-100 rounded-2xl shadow-sm mt-8">
+            <button onClick={() => router.push("/atendimento")} className="p-2 text-gray-500 hover:text-blue-600 rounded-lg transition-colors" >
+                <ArrowLeft size={20} />
+            </button>
             <div className="border-b border-gray-100 pb-6 mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">Meu Perfil</h1>
                 <p className="text-sm text-gray-500 mt-1">

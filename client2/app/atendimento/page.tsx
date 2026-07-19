@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Menu, Search, LogIn } from "lucide-react";
 import ChatCard from "@/components/ChatCard";
 import { useSession } from "next-auth/react";
 import "next-auth";
 import "next-auth/jwt";
+import {useRouter} from "next/navigation";
 
 declare module "next-auth" {
     interface Session {
@@ -25,6 +25,7 @@ declare module "next-auth/jwt" {
 
 export default function Atendimentos() {
     const { data: session } = useSession();
+    const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [data, setData] = useState<any[]>([]);
@@ -136,19 +137,6 @@ export default function Atendimentos() {
 
     return (
         <main className="container mx-auto p-4 h-[calc(100vh-2rem)] flex flex-col gap-6">
-            <div className="flex flex-col gap-4 w-full">
-                <div className="flex items-center gap-2 justify-end px-2">
-                    <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Buscar 1">
-                        <Search size={20} />
-                    </button>
-                    <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Buscar 2">
-                        <Menu size={20} />
-                    </button>
-                    <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Buscar 3">
-                        <LogIn size={20} />
-                    </button>
-                </div>
-            </div>
             {isOpen && <ChatCard onClose={() => setIsOpen(false)} data={null} />}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 overflow-hidden">
                 <aside className="lg:col-span-4 flex flex-col gap-4 overflow-hidden">
