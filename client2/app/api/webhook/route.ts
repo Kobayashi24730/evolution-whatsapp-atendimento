@@ -13,7 +13,7 @@ export async function POST(request: Request) {
         }
 
         let atendimento = await prisma.atendimento.findFirst({
-            where: { clienteNumero: numero, status: ["ABERTO", "TRIAGEM", "EM_ATENDIMENTO"]}
+            where: { clienteNumero: numero, status: {in: ["ABERTO", "TRIAGEM", "EM_ATENDIMENTO"]}}
         });
 
         if (!atendimento) {
@@ -35,9 +35,9 @@ export async function POST(request: Request) {
             }
         });
 
-        const evolutionIP = "http://host.docker.internal:8080";
-        const instance_name = "gui";
-        const API_KEY_SECERT = "0184C930D764-46AA-A42D-4831B939DDA7";
+        const evolutionIP = process.env.EVOLUTION_API_URL || "http://host.docker.internal:8080 ";
+        const instance_name = process.env.EVOLUTION_INSTANCE_NAME || "gui";
+        const API_KEY_SECERT = process.env.EVOLUTION_API_KEY || "7996256f-dfb9-4028-9fa3-1ed9a2f8b640";
         const nomeCliente = data.instanceName;
         const textoRespostaAutomatica = `Olá, ${nomeCliente}! Seu atendimento foi iniciado sob o protocolo nº ${atendimento.id.slice(0, 5)}. Um atendente humano falará com você em breve.`;
 

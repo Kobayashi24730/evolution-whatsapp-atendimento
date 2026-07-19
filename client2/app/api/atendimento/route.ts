@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
         const atendimento = await prisma.atendimento.findMany({
             where: {
-                status: ["ABERTO", "TRIAGEM", "EM_ATENDIMENTO"],
+                status: {in: ["ABERTO", "TRIAGEM", "EM_ATENDIMENTO"]},
                 ...(clienteNumero && {clienteNumero}),
                 ...(clienteNome && {clienteNome}),
                 ...(userId && {userId})
@@ -29,8 +29,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const { clienteNumero, clienteNome, userId, by } = await request.json();
-        if (!clienteNumero || !clienteNome || !userId || by) {
+        const { clienteNumero, clienteNome, userId } = await request.json();
+        if (!clienteNumero || !clienteNome || !userId ) {
             return NextResponse.json({ message: "Missing clienteNumero, clienteNome or userId" }, { status: 400 })
         }
         const atendimento = await prisma.atendimento.create({
@@ -60,7 +60,7 @@ export async function PUT(request: Request) {
             where: {
                 id: atendimentoId
             }, data: {
-                status: "EM ANDAMENTO",
+                status: "EM_ATENDIMENTO",
                 mensagens: {
                     create: {
                         texto: mensagens,

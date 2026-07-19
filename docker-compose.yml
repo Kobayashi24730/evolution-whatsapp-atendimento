@@ -3,6 +3,8 @@ services:
     image: postgres:15-alpine
     restart: always
     container_name: evolution_db
+    networks:
+      - nex_networks
     environment:
       POSTGRES_USER: guilherme_admin
       POSTGRES_PASSWORD: root
@@ -16,10 +18,17 @@ services:
     image: postgres:15-alpine
     restart: always
     container_name: evolution_client
+    networks:
+      - nex_networks
     environment:
       POSTGRES_USER: guilherme_client
       POSTGRES_PASSWORD: root
       POSTGRES_DB: evolution_client
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U guilherme_client -d evolution_client" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data_client:/var/lib/postgresql/data
     ports:
@@ -42,9 +51,12 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - nex_netwoks
+      - nex_networks
     environment:
-      SERVER_URL: http://localhost:8080
+      WEBHOOK_GLOBAL_ENABLED: "true"
+      WEBHOOK_GLOBAL_URL: http://atendimento_next:3000/api/webhook
+      WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS: "false"
+      SERVER_URL: http://evolution_api:8080
       DATABASE_ENABLED: "true"
       DATABASE_PROVIDER: postgresql
       DATABASE_CONNECTION_URI: postgresql://guilherme_admin:root@evolution_db:5432/evolution_automation
@@ -65,7 +77,7 @@ services:
       context: ./client2
     container_name: atendimento_next
     networks:
-      - nex_netwoks
+      - nex_networks
     ports:
       - "3000:3000"
     volumes:
@@ -76,6 +88,10 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://guilherme_client:root@evolution_client:5432/evolution_client
       - WATCHPACK_POLLING=true
+      - EVOLUTION_API_URL=http://evolution_api:8080
+      - EVOLUTION_API_KEY=7996256f-dfb9-4028-9fa3-1ed9a2f8b640
+      - EVOLUTION_INSTANCE_NAME=gui
+      - WEBHOOK_URL=http://atendimento_next:3000/api/webhook
     command: npm run dev
     depends_on:
       - evolution_client
@@ -84,3 +100,8 @@ volumes:
   postgres_data:
   postgres_data_client:
   redis_data:
+
+networks:
+  nex_networks:
+    driver: bridge
+    name: nex_networks

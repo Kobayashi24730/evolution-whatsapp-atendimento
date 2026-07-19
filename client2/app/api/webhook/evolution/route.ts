@@ -1,47 +1,74 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
+
 export async function POST(request: Request) {
     try {
         const body: any = await request.json();
-        console.log("RECEBI WEBHOOK DA EVOLUTION!! Evento:", body.event);
-        if (body.event !== "messages.upsert" || body.data?.key?.fromMe === true) {
-            return NextResponse.json({ status: "ignorado" });
+
+        // Garante que pega o evento independente de maiúsculo/minúsculo
+        const evento = body.event?.toUpperCase();
+        console.log("RECEBI WEBHOOK DA EVOLUTION!! Evento:", evento);
+
+        if (evento !== "MESSAGES_UPSERT") {
+            return NextResponse.json({ status: "ignorado", motivo: "evento_nao_suportado" });
         }
 
-        // 2. Extração dos dados limpos da Evolution
-        const numeroCliente = body.data.key.remoteJid;
-        const nomeCliente = body.data.pushName || "Cliente sem Nome";
-        const textoMensagem = body.data.message?.conversation || body.data.message?.extendedTextMessage?.text || "";
+        // A Evolution envia os dados das mensagens dentro de uma Array no 'data'
+        const mensagemArray = body.data;
+        if (!mensagemArray || !Array.isArray(mensagemArray) || mensagemArray.length === 0) {
+            return NextResponse.json({ status: "ignorado", motivo: "dados_vazios" });
+        }
 
-        // 3. Checar se já existe um atendimento ativo (Não finalizado) para este número
-        // Buscando por "ABERTO" ou "EM_ATENDIMENTO" dependendo do que você adotar no seu painel
+        const primeiraMensagem = mensagemArray[0];
+
+        // Se a mensagem foi enviada por você através do celular, ignora para não criar chat consigo mesmo
+        if (primeiraMensagem.key?.fromMe === true) {
+            return NextResponse.json({ status: "ignorado", motivo: "enviada_por_mim" });
+        }
+
+        // Tratamento dos dados extraídos do primeiro item da lista
+        const remoteJid = primeiraMensagem.key?.remoteJid || "";
+        const numeroCliente = remoteJid.split("@")[0]; // Remove o '@s.whatsapp.net' se necessário
+        const nomeCliente = primeiraMensagem.pushName || "Cliente sem Nome";
+
+        // Captura o texto tratando os formatos comuns da Evolution
+        const textoMensagem = primeiraMensagem.message?.conversation ||
+            primeiraMensagem.message?.extendedTextMessage?.text ||
+            "[Mídia/Outro formato]";
+
+        console.log(`Processando mensagem de ${nomeCliente} (${numeroCliente}): ${textoMensagem}`);
+
+        // Evita processar requisições sem número de cliente válido
+        if (!numeroCliente) {
+            return NextResponse.json({ status: "erro", motivo: "numero_invalido" }, { status: 400 });
+        }
+
+        // Busca atendimento aberto
         let atendimentoAberto = await prisma.atendimento.findFirst({
             where: {
                 clienteNumero: numeroCliente,
                 status: {
-                    in: ["ABERTO", "TRIAGEM", "EM_ATENDIMENTO"] // Evita abrir ticket duplicado se já estiver nessas fases
+                    in: ["ABERTO", "TRIAGEM", "EM_ATENDIMENTO"]
                 }
             }
         });
 
-        // 4. Se não existir, criamos o Atendimento e adicionamos a mensagem dentro dele
         if (!atendimentoAberto) {
             atendimentoAberto = await prisma.atendimento.create({
                 data: {
                     clienteNumero: numeroCliente,
                     clienteNome: nomeCliente,
-                    status: "ABERTO", // Status padrão do seu schema
+                    status: "ABERTO",
                     mensagens: {
                         create: {
                             texto: textoMensagem,
-                            fromMe: false // Indica que veio do cliente
+                            fromMe: false
                         }
                     }
                 }
             });
             console.log(`✅ Novo atendimento e mensagem salvos para: ${nomeCliente}`);
         } else {
-            // 5. Se o atendimento JÁ EXISTIR, apenas inserimos a nova mensagem na timeline dele
             await prisma.mensagem.create({
                 data: {
                     atendimentoId: atendimentoAberto.id,

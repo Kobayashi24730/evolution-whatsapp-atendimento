@@ -1,7 +1,7 @@
 export async function getChats() {
-    const response = await fetch('http://localhost:8080/api/v1/chats', {
+    const response = await fetch('http://evolution_api:8080/api/v1/chats', {
         headers: {
-            apikey: '300062F59970-4A9E-8859-7FC9CA1268A9'
+            apikey: '7996256f-dfb9-4028-9fa3-1ed9a2f8b640'
         }
     });
 
