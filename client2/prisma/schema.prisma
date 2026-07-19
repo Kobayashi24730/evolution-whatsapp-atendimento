@@ -15,7 +15,7 @@ enum StatusAtendimento {
 
 model Atendimento {
   id            String     @id @default(uuid())
-  clienteNumero String
+  clienteNumero String     @unique
   clienteNome   String?
   status        String     @default("ABERTO")
   mensagens     Mensagem[]

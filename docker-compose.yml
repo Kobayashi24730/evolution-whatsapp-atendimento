@@ -13,6 +13,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guilherme_admin -d evolution_automation"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   evolution_client:
     image: postgres:15-alpine
@@ -38,11 +43,18 @@ services:
     image: redis:latest
     container_name: evolution_redis
     restart: always
+    networks:
+      - nex_networks
     command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   evolution:
     image: evoapicloud/evolution-api:latest
@@ -69,8 +81,16 @@ services:
 
       AUTHENTICATION_API_KEY: 7996256f-dfb9-4028-9fa3-1ed9a2f8b640
     depends_on:
-      - evolution_db
-      - redis
+      evolution_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   nextjs:
     build:
@@ -94,7 +114,10 @@ services:
       - WEBHOOK_URL=http://atendimento_next:3000/api/webhook
     command: npm run dev
     depends_on:
-      - evolution_client
+      evolution_client:
+        condition: service_healthy
+      evolution:
+        condition: service_healthy
 
 volumes:
   postgres_data:
