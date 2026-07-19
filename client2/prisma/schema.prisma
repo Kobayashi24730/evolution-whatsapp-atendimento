@@ -1,28 +1,21 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-enum StatusAtendimento {
-  TRIAGEM
-  AGUARDANDO_HUMANO
-  EM_ATENDIMENTO
-  FINALIZADO
+datasource db {
+  provider = "postgresql"
 }
 
 model Atendimento {
   id            String     @id @default(uuid())
-  clienteNumero String
+  clienteNumero String     @unique
   clienteNome   String?
   status        String     @default("ABERTO")
-  mensagens     Mensagem[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
-  user          User?      @relation(fields: [userId], references: [id])
   userId        String?
+  user          User?      @relation(fields: [userId], references: [id])
+  mensagens     Mensagem[]
 
   @@map("Atendimento")
 }
@@ -30,10 +23,10 @@ model Atendimento {
 model Mensagem {
   id            String      @id @default(uuid())
   atendimentoId String
-  atendimento   Atendimento @relation(fields: [atendimentoId], references: [id])
   texto         String
   fromMe        Boolean     @default(false)
   timestamp     DateTime    @default(now())
+  atendimento   Atendimento @relation(fields: [atendimentoId], references: [id])
 }
 
 model Account {
@@ -42,15 +35,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -67,14 +59,13 @@ model User {
   id            String        @id @default(uuid())
   name          String
   email         String        @unique
-  atendimentos  Atendimento[]
   createdAt     DateTime      @default(now())
   emailVerified Boolean       @default(false)
   image         String?
   password      String?
-
-  accounts Account[]
-  sessions Session[]
+  accounts      Account[]
+  atendimentos  Atendimento[]
+  sessions      Session[]
 }
 
 model VerificationToken {
@@ -83,4 +74,11 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum StatusAtendimento {
+  TRIAGEM
+  AGUARDANDO_HUMANO
+  EM_ATENDIMENTO
+  FINALIZADO
 }

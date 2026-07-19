@@ -14,7 +14,12 @@ export async function GET(request: Request) {
                 status: {in: ["ABERTO", "TRIAGEM", "EM_ATENDIMENTO"]},
                 ...(clienteNumero && {clienteNumero}),
                 ...(clienteNome && {clienteNome}),
-                ...(userId && {userId})
+                ...(userId && {
+                    OR: [
+                        { userId: userId },
+                        { userId: null }
+                    ]
+                })
             }
         });
         return NextResponse.json({ message: "Success to get atendimentos", data: atendimento }, { status: 200 });
