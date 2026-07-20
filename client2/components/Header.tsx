@@ -16,7 +16,7 @@ import { BarChart3,
 
 const iconsTopBar = [
     { icon: MessageSquare, label: "atendimento" },
-    { icon: Search, label: "Procurar" },
+    { icon: Search, label: "procurar" },
     { icon: BarChart3, label: "dashboard" },
     { icon: Settings, label: "configuracoes" }
 ];
