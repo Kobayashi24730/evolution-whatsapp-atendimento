@@ -77,6 +77,51 @@ export async function PUT(request: Request) {
                 mensagens: true
             },
         });
+
+        if (Boolean(by) === true) {
+            const evolutionURL = process.env.EVOLUTION_API_URL || "http://evolution_api:8080";
+            const instanceName = process.env.INSTANCE_NAME || "gui";
+            const apikey = process.env.INSTANCE_API_KEY || "7996256f-dfb9-4028-9fa3-1ed9a2f8b640";
+            try {
+                // Mantém o JID completo que a API mapeou internamente
+                const destinoJid = data.clienteNumero.includes("@")
+                    ? data.clienteNumero
+                    : `${data.clienteNumero}@s.whatsapp.net`;
+
+                const payload = {
+                    number: destinoJid,
+                    text: mensagens,
+                    options: {
+                        delay: 1200,
+                        presence: "composing",
+                        // 🚨 FORÇA O BYPASS: Ignora o validador interno de existência do número
+                        checkContact: false
+                    }
+                };
+
+                console.log("🚀 [Envio Painel] Disparando com checkContact desabilitado:", JSON.stringify(payload));
+
+                const response = await fetch(`${evolutionURL}/message/sendText/${instanceName}`, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "apikey": apikey
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const responseData = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    console.error("❌ A Evolution API v2 retornou Bad Request (400):");
+                    console.dir(responseData, { depth: null });
+                } else {
+                    console.log("✅ Mensagem enviada ao WhatsApp do cliente com sucesso!");
+                }
+            } catch (fetchError) {
+                console.error("❌ Falha crítica de rede com a Evolution API:", fetchError);
+            }
+        }
         return NextResponse.json({ message: "Success to update message", data: data }, { status: 200 });
     } catch (error) {
         console.error("Failed to message post, error line: ", error);
