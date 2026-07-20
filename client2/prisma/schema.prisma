@@ -8,7 +8,7 @@ datasource db {
 
 model Atendimento {
   id            String     @id @default(uuid())
-  clienteNumero String     @unique
+  clienteNumero String
   clienteNome   String?
   status        String     @default("ABERTO")
   createdAt     DateTime   @default(now())
