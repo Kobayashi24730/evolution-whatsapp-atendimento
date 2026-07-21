@@ -22,6 +22,8 @@ model Atendimento {
 
 model Mensagem {
   id            String      @id @default(uuid())
+  mediaUrl      String?
+  tipo          String   @default("TEXTO")
   atendimentoId String
   texto         String
   fromMe        Boolean     @default(false)

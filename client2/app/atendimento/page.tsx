@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import "next-auth";
 import "next-auth/jwt";
 import {useRouter} from "next/navigation";
+import Dropdown from "@/components/Dropdown";
 
 declare module "next-auth" {
     interface Session {
@@ -131,6 +132,20 @@ export default function Atendimentos() {
         }
     }
 
+    async function mudarStatus(id: string | number, status: string) {
+        try {
+            const response = await fetch("/api/status",{
+                method: "PUT",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: status, id })
+            });
+            if (!response.ok) throw new Error("Erro ao mudar status");
+            getAtendimentos();
+        } catch (err) {
+            return console.error("Erro ao mudar status:", err);
+        }
+    }
+
     function onCartNewChat () {
         setIsOpen(true);
     }
@@ -151,16 +166,21 @@ export default function Atendimentos() {
                                     atendimentoAtivo?.id === atendimento.id ? "border-blue-500 bg-blue-50/20" : "border-gray-100"
                                 }`}
                             >
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-bold text-gray-800">{atendimento.clienteNome || "Sem nome"}</h3>
-                                    <span className="text-[10px] text-gray-400 font-medium">
+                                <div>
+                                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                                        <span className="text-primary-foreground text-xs font-semibold">{atendimento.clienteNome .charAt()}</span>
+                                    </div>
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="font-bold text-gray-800">{atendimento.clienteNome || "Sem nome"}</h3>
+                                        <span className="text-[10px] text-gray-400 font-medium">
                                         {atendimento.createdAt ? new Date(atendimento.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ""}
                                     </span>
+                                    </div>
+                                    <p className="text-sm text-gray-500 line-clamp-1 italic">WhatsApp: {atendimento.clienteNumero}</p>
+                                    <button className="mt-2 text-xs font-bold text-blue-600 group-hover:text-blue-700 uppercase tracking-wider text-left">
+                                        Ver chat
+                                    </button>
                                 </div>
-                                <p className="text-sm text-gray-500 line-clamp-1 italic">WhatsApp: {atendimento.clienteNumero}</p>
-                                <button className="mt-2 text-xs font-bold text-blue-600 group-hover:text-blue-700 uppercase tracking-wider text-left">
-                                    Ver chat
-                                </button>
                             </div>
                         ))}
                     </div>
@@ -179,9 +199,12 @@ export default function Atendimentos() {
                                         Status: {atendimentoAtivo.status} | WhatsApp: {atendimentoAtivo.clienteNumero}
                                     </p>
                                 </div>
-                                <button onClick={() => finalizarAtendimento(atendimentoAtivo.id)} className="text-xs font-bold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
-                                    Finalizar
-                                </button>
+                                <div className="flex gap-4">
+                                    <Dropdown status={atendimentoAtivo.status} onSelect={(status) => mudarStatus(atendimentoAtivo.id, status)} />
+                                    <button onClick={() => finalizarAtendimento(atendimentoAtivo.id)} className="text-xs font-bold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition">
+                                        Finalizar
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="flex-1 p-6 overflow-y-auto bg-slate-50">
