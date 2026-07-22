@@ -7,28 +7,65 @@ datasource db {
 }
 
 model Atendimento {
-  id            String     @id @default(uuid())
-  clienteNumero String
-  clienteNome   String?
-  status        String     @default("ABERTO")
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  userId        String?
-  user          User?      @relation(fields: [userId], references: [id])
-  mensagens     Mensagem[]
+  id              String             @id @default(uuid())
+  clienteNumero   String
+  clienteNome     String?
+  clienteAvatar   String?
+  clienteCpf      String?
+  clienteEmail    String?
 
+  contratoId      String?
+  contratoPlano   String?
+  contratoStatus  String?
+
+  status          String             @default("ABERTO")
+  aba             String             @default("GERAL")
+  unreadCount     Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  userId          String?
+  user            User?              @relation(fields: [userId], references: [id])
+
+  mensagens       Mensagem[]
+  etiquetas       AtendimentoTag[]
   @@map("Atendimento")
 }
 
 model Mensagem {
   id            String      @id @default(uuid())
+  texto         String?
+  tipo          String      @default("TEXTO")
   mediaUrl      String?
-  tipo          String   @default("TEXTO")
-  atendimentoId String
-  texto         String
+  mediaName     String?
+  caption       String?
+
   fromMe        Boolean     @default(false)
+  lida          Boolean     @default(false)
   timestamp     DateTime    @default(now())
-  atendimento   Atendimento @relation(fields: [atendimentoId], references: [id])
+
+  atendimentoId String
+  atendimento   Atendimento @relation(fields: [atendimentoId], references: [id], onDelete: Cascade)
+  @@map("Mensagem")
+}
+
+model Etiqueta {
+  id          String           @id @default(uuid())
+  nome        String
+  cor         String           @default("#3B82F6")
+  atendimentos AtendimentoTag[]
+  @@map("Etiqueta")
+}
+
+model AtendimentoTag {
+  atendimentoId String
+  etiquetaId    String
+
+  atendimento   Atendimento @relation(fields: [atendimentoId], references: [id], onDelete: Cascade)
+  etiqueta      Etiqueta    @relation(fields: [etiquetaId], references: [id], onDelete: Cascade)
+
+  @@id([atendimentoId, etiquetaId])
+  @@map("AtendimentoTag")
 }
 
 model Account {

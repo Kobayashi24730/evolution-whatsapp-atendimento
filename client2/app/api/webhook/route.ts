@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
+import { Prisma } from "@prisma/client";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
         if (remoteJid.includes("@g.us")) return NextResponse.json({ status: "ignorado", motivo: "evento_de_grupo_ignorado" });
         if (remoteJid.includes("@status")) return NextResponse.json({ status: "ignorado", motivo: "evento_de_status_ignorado" });
         const numeroCliente = remoteJid.includes("@") ? remoteJid.split("@")[0] : remoteJid;
+        const profilePic = primeiroDado.profilePictureUrl || primeiroDado.picture || primeiroDado.avatar ||null;
         if (!numeroCliente || numeroCliente.trim() === "" || numeroCliente.length < 8) {
             return NextResponse.json({ status: "ignorado", motivo: "numero_cliente_invalido_ou_curto" });
         }
@@ -35,13 +37,16 @@ export async function POST(request: Request) {
         // FLUXO DE CONTATOS (CONTACTS.UPDATE)
         if (evento === "CONTACTS.UPDATE") {
             const nomeCliente = primeiroDado.pushName || primeiroDado.name || primeiroDado.verifiedName;
-            if (nomeCliente) {
+            const updateData: any = {};
+            if (nomeCliente) updateData.clienteNome = nomeCliente;
+            if (profilePic) updateData.clienteAvatar = profilePic;
+            if (Object.keys(updateData).length > 0) {
                 await prisma.atendimento.updateMany({
                     where: {
                         clienteNumero: numeroCliente,
                         status: { in: ["ABERTO", "ESPERA", "EM_ATENDIMENTO"] }
                     },
-                    data: { clienteNome: nomeCliente }
+                    data: updateData
                 });
             }
             return NextResponse.json({ success: true, fluxo: "contacts_update_sincronizado" });
@@ -59,17 +64,28 @@ export async function POST(request: Request) {
             "";
         let mediaUrl = "";
         let tipoMidia = "TEXTO";
+        let midiaNome = null;
+        let caption = null;
 
         if (messageObject.imageMessage) {
             tipoMidia = "IMAGE";
             mediaUrl = messageObject.imageMessage.url || messageId.imageMessage.directPath || "";
+            caption = messageObject.imageMessage.caption || null;
             textoMensagem = messageObject.imageMessage.caption || "[Imagem recebida]";
         } else if (messageObject.videoMessage) {
             tipoMidia = "VIDEO";
+            caption = messageObject.videoMessage.caption || null;
             mediaUrl = messageObject.videoMessage.url || messageId.videoMessage.directPath || "";
             textoMensagem = messageObject.videoMessage.caption || "[Video recebido]";
+        } else if (messageObject.audioMessage) {
+            tipoMidia = "AUDIO";
+            mediaUrl = messageObject.audioMessage.url || messageId.audioMessage.directPath || "";
+            textoMensagem = messageObject.audioMessage.caption || "[Audio recebido]";
         } else if (messageObject.documentMessage) {
             tipoMidia = "DOCUMENT";
+            midiaNome = messageObject.documentMessage.fileName || null;
+            caption = messageObject.documentMessage.caption || null;
+            mediaUrl = messageObject.documentMessage.url || "[Sen url]";
             textoMensagem = messageObject.documentMessage.caption || "[Documento recebido]";
         }
 
@@ -81,12 +97,8 @@ export async function POST(request: Request) {
             const mensagemExistente = await prisma.mensagem.findFirst({
                 where: {
                     texto: textoMensagem,
-                    atendimento: {
-                        clienteNumero: numeroCliente
-                    },
-                    timestamp: {
-                        gte: new Date(Date.now() - 4000)
-                    }
+                    atendimento: { clienteNumero: numeroCliente },
+                    timestamp: { gte: new Date(Date.now() - 4000) }
                 }
             });
             if (mensagemExistente) {
@@ -109,21 +121,43 @@ export async function POST(request: Request) {
                     clienteNumero: numeroCliente,
                     clienteNome: nomeCliente,
                     status: "ABERTO",
+                    unreadCount: 1,
                     mensagens: {
-                        create: { texto: textoMensagem, fromMe: false }
+                        create: {
+                            texto: textoMensagem,
+                            tipo: tipoMidia,
+                            mediaUrl: mediaUrl || null,
+                            mediaName: midiaNome || null,
+                            caption: caption || null,
+                            fromMe: false
+                        }
                     }
                 }
             });
             novoAtendimentoCriado = true;
         } else {
             console.log(`Adicionando mensagem real ao atendimento existente ID: ${atendimentoActive.id}`);
-            await prisma.mensagem.create({
-                data: {
-                    atendimentoId: atendimentoActive.id,
-                    texto: textoMensagem,
-                    fromMe: false
-                }
-            });
+            const idAtendimento: string = atendimentoActive.id;
+            await prisma.$transaction([
+                prisma.mensagem.create({
+                    data: {
+                        atendimentoId: atendimentoActive.id,
+                        texto: textoMensagem,
+                        tipo: tipoMidia,
+                        mediaUrl: mediaUrl || null,
+                        mediaName: midiaNome || null,
+                        caption: caption || null,
+                        fromMe: false
+                    }
+                }),
+                prisma.atendimento.update({
+                    where: { id: idAtendimento }  as Prisma.AtendimentoWhereUniqueInput, //as nao necessário
+                    data: {
+                        unreadCount: { increment: 1 },
+                        ...(profilePic && {clienteAvatar: profilePic})
+                    }
+                })
+            ]);
         }
 
         if (novoAtendimentoCriado) {
