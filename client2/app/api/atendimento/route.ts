@@ -20,7 +20,13 @@ export async function GET(request: Request) {
                         { userId: null }
                     ]
                 })
-            }
+            }, include: {
+                mensagens: {
+                    orderBy: {
+                        timestamp: 'asc',
+                    },
+                },
+            },
         });
         return NextResponse.json({ message: "Success to get atendimentos", data: atendimento }, { status: 200 });
     } catch (error) {

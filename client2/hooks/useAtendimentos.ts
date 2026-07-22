@@ -48,6 +48,7 @@ export function useAtendimentos() {
             if (res && Array.isArray(res.data)) {
                 setData(res.data);
             }
+            console.log(res);
         } catch (err) {
             console.error("Erro ao buscar atendimentos:", err);
         }
