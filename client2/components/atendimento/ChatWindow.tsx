@@ -1,5 +1,6 @@
 import Dropdown from "@/components/Dropdown";
 import { Images, Paperclip, Send, MessageSquareDashed } from 'lucide-react';
+import UseAudio from "@/components/atendimento/useAudio";
 
 interface ChatWindowProps {
     atendimentoAtivo: any;
@@ -76,13 +77,108 @@ export function ChatWindow({
                                         <span className="text-[10px] font-medium text-gray-400 mb-1 px-1">
                                             {m.fromMe ? "Você" : atendimentoAtivo.clienteNome || "Cliente"}
                                         </span>
-                                        <div
-                                            className={`px-4 py-2.5 rounded-2xl shadow-xs text-sm leading-relaxed
-                                                ${m.fromMe ? "bg-blue-600 text-white rounded-tr-sm" 
-                                                : "bg-white text-gray-700 border border-gray-100 rounded-tl-sm"}`}
-                                        >
-                                            {m.texto}
-                                        </div>
+                                        {m.mediaUrl && m.tipo === "IMAGE" && (() => {
+                                            const imageSrc = m.mediaUrl.startsWith("data:") || m.mediaUrl.startsWith("http") ? m.mediaUrl : `data:image/jpeg;base64,${m.mediaUrl}`;
+                                            const handleOpenImage = () => {
+                                                if (m.mediaUrl.startsWith("http")) {
+                                                    window.open(m.mediaUrl, "_black", "noopener,noreferrer");
+                                                } else {
+                                                    const imageWindow = window.open("");
+                                                    imageWindow?.document.write(
+                                                        `<body style="margin:0; background:#0e0e0e; display:flex; align-items:center; justify-center:center; height:100vh;">
+                                                          <img src="${imageSrc}" style="max-width:100%; max-height:100vh; object-fit:contain; margin:auto;" />
+                                                        </body>`
+                                                    );
+                                                }
+                                            };
+                                            return(
+                                                <div onClick={handleOpenImage} className="relative group max-w-sm mt-1 overflow-hidden rounded-xl border border-border/40 shadow-sm transition-all duration-200 hover:shadow-md">
+                                                    <img
+                                                        src={imageSrc}
+                                                        alt={m.caption || "Imagem da conversa"}
+                                                        loading="lazy"
+                                                        className="w-full h-auto max-h-[320px] object-cover transition-transform duration-300 group-hover:scale-[1.02] active:scale-[0.98]"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center text-white">
+                                                        <div className="p-2 rounded-full bg-black/50 backdrop-blur-sm">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                <circle cx="11" cy="11" r="8"/>
+                                                                <line x1="21" x2="16.65" y1="21" y2="16.65"/>
+                                                                <line x1="11" x2="11" y1="8" y2="14"/>
+                                                                <line x1="8" x2="14" y1="11" y2="11"/>
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    {m.caption && (
+                                                        <div className="p-2.5 pt-2 text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap break-words border-t border-border/20">
+                                                            {m.caption}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                        {m.mediaUrl && m.tipo === "AUDIO" && (
+                                            <UseAudio m={m}/>
+                                        )}
+                                        {m.mediaUrl && m.tipo === "VIDEO" && (() => {
+                                            const videoSrc = m.mediaUrl.startsWith("data:") || m.mediaUrl.startsWith("http") ? m.mediaUrl : `data:video/mp4;base64,${m.mediaUrl}`;
+                                            return(
+                                                <div className="relative group max-w-xs sm:max-w-sm mt-1 overflow-hidden rounded-2xl border border-border/40 bg-black/10 dark:bg-black/40 shadow-sm transition-all duration-200 hover:shadow-md">
+                                                    <div className="relative flex items-center justify-center bg-black/80 min-h-[180px]">
+                                                        <video
+                                                            controls src={m.mediaUrl.startsWith("data:") ? m.mediaUrl : `data:video/mp4/base64,${m.mediaUrl}`}
+                                                            className="rounded-lg max-w-full mt-1"
+                                                        />
+                                                    </div>
+                                                    {m.caption && (
+                                                        <div className="p-2.5 pt-2 text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap break-words border-t border-border/20 bg-card/50">
+                                                            {m.caption}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                        {/*Ajustado sistema pata baixar o documento ja pronto*/}
+                                        {m.mediaUrl && m.tipo === "DOCUMENT" && (() => {
+                                            const isPdf = m.mediaName?.toLowerCase().endsWith(".pdf");
+                                            const defaultMime = isPdf ? "application/pdf" : "application/octet-stream";
+                                            const fileSrc = m.mediaUrl.startsWith("data:") ? m.mediaUrl : `data:${defaultMime};base64,${m.mediaUrl}`;
+                                            const finame = m.mediaName || (isPdf ? "documento.pdf" : "documento");
+                                            return (
+                                                <a
+                                                    href={fileSrc}
+                                                    download={finame}
+                                                    rel="noopener noreferrer"
+                                                    target="_blank"
+                                                    className="mt-1.5 flex items-center gap-3 p-2.5 px-3 bg-muted/40 hover:bg-muted/70 border border-border/40 rounded-xl transition-all duration-200 group max-w-xs sm:max-w-sm no-underline">
+                                                    <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0 group-hover:scale-105 transition-transform">
+                                                        <span className="text-lg">📄</span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 overflow-hidden">
+                                                        <p className="text-xs font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                                                            {finame}
+                                                        </p>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">{isPdf ? "PDF clique para baixar" : "Documento"}</p>
+                                                    </div>
+                                                    <div className="text-muted-foreground group-hover:text-primary transition-colors pr-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                            <polyline points="7 10 12 15 17 20" />
+                                                            <line x1="12" x2="12" y1="15" y2="3"/>
+                                                        </svg>
+                                                    </div>
+                                                </a>
+                                            );
+                                        })()}
+                                        {m.texto && !["IMAGE","VIDEO","AUDIO"].includes(m.tipo) && (
+                                            <div
+                                                className={`px-4 py-2.5 rounded-2xl shadow-xs text-sm leading-relaxed
+                                                ${m.fromMe ? "bg-blue-600 text-white rounded-tr-sm"
+                                                    : "bg-white text-gray-700 border border-gray-100 rounded-tl-sm"}`}
+                                            >
+                                                {m.texto}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

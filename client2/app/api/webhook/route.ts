@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         if (primeiroDado.key?.fromMe === true) return NextResponse.json({ status: "ignorado", motivo: "enviada_por_mim" });
         const messageId = primeiroDado.key?.id || primeiroDado.id || "";
         const nomeCliente = primeiroDado.pushName || primeiroDado.name || "Cliente sem Nome";
-        const messageObject = primeiroDado.message() || {};
+        const messageObject = primeiroDado.message || {};
         let textoMensagem = primeiroDado.message?.conversation || primeiroDado.message?.extendedTextMessage?.text ||
             primeiroDado.text ||
             primeiroDado.message?.imageMessage?.caption ||
@@ -67,25 +67,42 @@ export async function POST(request: Request) {
         let midiaNome = null;
         let caption = null;
 
+        async function baixarMidia(messageId: string, instanveName: string) {
+            const evolutionURL = process.env.EVOLUTION_API_URL || "http://evolution_api:8080";
+            const instanceName = body.instance || process.env.EVOLUTION_INSTANCE_NAME || "gui";
+            const apiKey = process.env.EVOLUTION_API_KEY || "7996256f-dfb9-4028-9fa3-1ed9a2f8b640";
+            try {
+                const res = await fetch(`${evolutionURL}/chat/getBase64FromMediaMessage/${instanceName}`, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json', "apikey": apiKey },
+                    body: JSON.stringify({message: {key: {id: messageId}}, convertToMp4: false })
+                });
+                const json = await res.json();
+                return json.base64 || json.url || "";
+            } catch {
+                return "";
+            }
+        }
+
         if (messageObject.imageMessage) {
             tipoMidia = "IMAGE";
-            mediaUrl = messageObject.imageMessage.url || messageId.imageMessage.directPath || "";
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
             caption = messageObject.imageMessage.caption || null;
             textoMensagem = messageObject.imageMessage.caption || "[Imagem recebida]";
         } else if (messageObject.videoMessage) {
             tipoMidia = "VIDEO";
             caption = messageObject.videoMessage.caption || null;
-            mediaUrl = messageObject.videoMessage.url || messageId.videoMessage.directPath || "";
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
             textoMensagem = messageObject.videoMessage.caption || "[Video recebido]";
         } else if (messageObject.audioMessage) {
             tipoMidia = "AUDIO";
-            mediaUrl = messageObject.audioMessage.url || messageId.audioMessage.directPath || "";
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
             textoMensagem = messageObject.audioMessage.caption || "[Audio recebido]";
         } else if (messageObject.documentMessage) {
             tipoMidia = "DOCUMENT";
             midiaNome = messageObject.documentMessage.fileName || null;
             caption = messageObject.documentMessage.caption || null;
-            mediaUrl = messageObject.documentMessage.url || "[Sen url]";
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
             textoMensagem = messageObject.documentMessage.caption || "[Documento recebido]";
         }
 
@@ -119,20 +136,19 @@ export async function POST(request: Request) {
             atendimentoActive = await prisma.atendimento.create({
                 data: {
                     clienteNumero: numeroCliente,
-                    clienteNome: nomeCliente,
+                    clienteNome: nomeCliente || "Cliente sem nome",
                     status: "ABERTO",
-                    unreadCount: 1,
                     mensagens: {
                         create: {
-                            texto: textoMensagem,
+                            texto: textoMensagem || "",
                             tipo: tipoMidia,
                             mediaUrl: mediaUrl || null,
                             mediaName: midiaNome || null,
                             caption: caption || null,
                             fromMe: false
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             });
             novoAtendimentoCriado = true;
         } else {
