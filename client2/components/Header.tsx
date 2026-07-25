@@ -4,7 +4,8 @@ import { useSession, signOut } from "next-auth/react";
 import LoginForm from "@/app/login/page";
 import {useEffect} from "react";
 import {usePathname, useRouter} from "next/navigation";
-import { BarChart3,
+import {
+    BarChart3,
     LogIn,
     LogOut,
     Search,
@@ -12,11 +13,13 @@ import { BarChart3,
     Users2,
     Gift,
     MessageSquare,
-    Settings } from "lucide-react";
+    Settings, Home
+} from "lucide-react";
 
 const iconsTopBar = [
+    { icon: Home, label: "home" },
     { icon: MessageSquare, label: "atendimento" },
-    { icon: Search, label: "Procurar" },
+    { icon: Search, label: "procurar" },
     { icon: BarChart3, label: "dashboard" },
     { icon: Settings, label: "configuracoes" }
 ];
@@ -45,7 +48,7 @@ export default function Header() {
                 <div className="flex items-center gap-4">
                     <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
                         {/*<Link href={session?.user ? "/atendimento" : "/login"} className="text-black hover:text-blue-600  transition">Atendimento</Link>*/}
-                        <Link href="/profile" className="flex items-center gap-2 px-2 py-1.5 rounded-md hover-subtle transition-all">
+                        <Link href="/configuracoes" className="flex items-center gap-2 px-2 py-1.5 rounded-md hover-subtle transition-all">
                             <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                                 <span className="text-primary-foreground text-xs font-semibold">{session?.user?.email ? session.user.email .charAt(0).toUpperCase() : "U"}</span>
                             </div>

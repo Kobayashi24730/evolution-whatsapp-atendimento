@@ -1,47 +1,126 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
+import { Prisma } from "@prisma/client";
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function POST(request: Request) {
     try {
         const body: any = await request.json();
         const evento = body.event?.toUpperCase();
-        console.log("📥 RECEBI WEBHOOK DA EVOLUTION!! Evento:", evento);
+        const eventosPermitidos = ["MESSAGES_UPSERT", "MESSAGES.UPSERT", "CONTACTS.UPDATE"];
+        if (!eventosPermitidos.includes(evento)) return NextResponse.json({ status: "ignorado", motivo: `evento_${evento}_nao_suportado` });
 
-        if (evento !== "MESSAGES_UPSERT") {
-            console.log("⚠️ Webhook ignorado: Evento não é MESSAGES_UPSERT. Recebido:", evento);
-            return NextResponse.json({ status: "ignorado", motivo: "evento_nao_suportado" });
+        let primeiroDado = null;
+        if (body.data) {
+            if (Array.isArray(body.data)) {
+                if (body.data.length === 0) {
+                    return NextResponse.json({ status: "ignorado", motivo: "dados_array_vazio" });
+                }
+                primeiroDado = body.data[0];
+            } else {
+                primeiroDado = body.data;
+            }
         }
 
-        const mensagemArray = body.data;
-        if (!mensagemArray || !Array.isArray(mensagemArray) || mensagemArray.length === 0) {
-            console.log("⚠️ Webhook ignorado: mensagemArray vazio ou inválido.");
-            return NextResponse.json({ status: "ignorado", motivo: "dados_vazios" });
+        if (!primeiroDado) return NextResponse.json({ status: "ignorado", motivo: "dados_nao_encontrados" });
+        const remoteJid = primeiroDado.key?.remoteJid || primeiroDado.remoteJid || primeiroDado.jid || body.sender || "";
+        if (remoteJid.includes("@lid")) return NextResponse.json({ status: "ignorado", motivo: "identificador_interno_lid_ignorado" });
+        if (remoteJid.includes("@g.us")) return NextResponse.json({ status: "ignorado", motivo: "evento_de_grupo_ignorado" });
+        if (remoteJid.includes("@status")) return NextResponse.json({ status: "ignorado", motivo: "evento_de_status_ignorado" });
+        const numeroCliente = remoteJid.includes("@") ? remoteJid.split("@")[0] : remoteJid;
+        const profilePic = primeiroDado.profilePictureUrl || primeiroDado.picture || primeiroDado.avatar ||null;
+        if (!numeroCliente || numeroCliente.trim() === "" || numeroCliente.length < 8) {
+            return NextResponse.json({ status: "ignorado", motivo: "numero_cliente_invalido_ou_curto" });
         }
 
-        const primeiraMensagem = mensagemArray[0];
-        console.log("🔍 Dados da primeira mensagem recebida:", {
-            fromMe: primeiraMensagem.key?.fromMe,
-            remoteJid: primeiraMensagem.key?.remoteJid,
-            pushName: primeiraMensagem.pushName
-        });
-
-        if (primeiraMensagem.key?.fromMe === true) {
-            console.log("⚠️ Webhook ignorado: Mensagem enviada por mim mesmo (fromMe === true).");
-            return NextResponse.json({ status: "ignorado", motivo: "enviada_por_mim" });
+        // FLUXO DE CONTATOS (CONTACTS.UPDATE)
+        if (evento === "CONTACTS.UPDATE") {
+            const nomeCliente = primeiroDado.pushName || primeiroDado.name || primeiroDado.verifiedName;
+            const updateData: any = {};
+            if (nomeCliente) updateData.clienteNome = nomeCliente;
+            if (profilePic) updateData.clienteAvatar = profilePic;
+            if (Object.keys(updateData).length > 0) {
+                await prisma.atendimento.updateMany({
+                    where: {
+                        clienteNumero: numeroCliente,
+                        status: { in: ["ABERTO", "ESPERA", "EM_ATENDIMENTO"] }
+                    },
+                    data: updateData
+                });
+            }
+            return NextResponse.json({ success: true, fluxo: "contacts_update_sincronizado" });
         }
 
-        const remoteJid = primeiraMensagem.key?.remoteJid || "";
-        const numeroCliente = remoteJid.split("@")[0];
-        const nomeCliente = primeiraMensagem.pushName || "Cliente sem Nome";
-        const textoMensagem = primeiraMensagem.message?.conversation ||
-            primeiraMensagem.message?.extendedTextMessage?.text ||
-            primeiraMensagem.message?.imageMessage?.caption ||
-            primeiraMensagem.message?.videoMessage?.caption ||
-            "[Mídia/Outro]";
+        // FLUXO DE MENSAGENS (MESSAGES.UPSERT)
+        if (primeiroDado.key?.fromMe === true) return NextResponse.json({ status: "ignorado", motivo: "enviada_por_mim" });
+        const messageId = primeiroDado.key?.id || primeiroDado.id || "";
+        const nomeCliente = primeiroDado.pushName || primeiroDado.name || "Cliente sem Nome";
+        const messageObject = primeiroDado.message || {};
+        let textoMensagem = primeiroDado.message?.conversation || primeiroDado.message?.extendedTextMessage?.text ||
+            primeiroDado.text ||
+            primeiroDado.message?.imageMessage?.caption ||
+            primeiroDado.message?.videoMessage?.caption ||
+            "";
+        let mediaUrl = "";
+        let tipoMidia = "TEXTO";
+        let midiaNome = null;
+        let caption = null;
 
-        if (!numeroCliente) {
-            console.log("❌ Erro: número do cliente inválido ou ausente no remoteJid.");
-            return NextResponse.json({ status: "erro", motivo: "numero_invalido" }, { status: 400 });
+        async function baixarMidia(messageId: string, instanveName: string) {
+            const evolutionURL = process.env.EVOLUTION_API_URL || "http://evolution_api:8080";
+            const instanceName = body.instance || process.env.EVOLUTION_INSTANCE_NAME || "gui";
+            const apiKey = process.env.EVOLUTION_API_KEY || "7996256f-dfb9-4028-9fa3-1ed9a2f8b640";
+            try {
+                const res = await fetch(`${evolutionURL}/chat/getBase64FromMediaMessage/${instanceName}`, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json', "apikey": apiKey },
+                    body: JSON.stringify({message: {key: {id: messageId}}, convertToMp4: false })
+                });
+                const json = await res.json();
+                return json.base64 || json.url || "";
+            } catch {
+                return "";
+            }
+        }
+
+        if (messageObject.imageMessage) {
+            tipoMidia = "IMAGE";
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
+            caption = messageObject.imageMessage.caption || null;
+            textoMensagem = messageObject.imageMessage.caption || "[Imagem recebida]";
+        } else if (messageObject.videoMessage) {
+            tipoMidia = "VIDEO";
+            caption = messageObject.videoMessage.caption || null;
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
+            textoMensagem = messageObject.videoMessage.caption || "[Video recebido]";
+        } else if (messageObject.audioMessage) {
+            tipoMidia = "AUDIO";
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
+            textoMensagem = messageObject.audioMessage.caption || "[Audio recebido]";
+        } else if (messageObject.documentMessage) {
+            tipoMidia = "DOCUMENT";
+            midiaNome = messageObject.documentMessage.fileName || null;
+            caption = messageObject.documentMessage.caption || null;
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
+            textoMensagem = messageObject.documentMessage.caption || "[Documento recebido]";
+        }
+
+        if (!textoMensagem && !mediaUrl || textoMensagem.includes("Seu atendimento foi iniciado sob o protocolo")) {
+            return NextResponse.json({ status: "ignorado", motivo: "mensagem_vazia_ou_sistema" });
+        }
+
+        if (messageId) {
+            const mensagemExistente = await prisma.mensagem.findFirst({
+                where: {
+                    texto: textoMensagem,
+                    atendimento: { clienteNumero: numeroCliente },
+                    timestamp: { gte: new Date(Date.now() - 4000) }
+                }
+            });
+            if (mensagemExistente) {
+                return NextResponse.json({ status: "ignorado", motivo: "mensagem_duplicada_bloqueada" });
+            }
         }
 
         let atendimentoActive = await prisma.atendimento.findFirst({
@@ -52,72 +131,76 @@ export async function POST(request: Request) {
         });
 
         let novoAtendimentoCriado = false;
-
         if (!atendimentoActive) {
-            console.log(`🔨 Criando novo atendimento para ${nomeCliente} (${numeroCliente})...`);
+            console.log(`Criando novo atendimento direto via Mensagem para ${numeroCliente}...`);
             atendimentoActive = await prisma.atendimento.create({
                 data: {
                     clienteNumero: numeroCliente,
-                    clienteNome: nomeCliente,
+                    clienteNome: nomeCliente || "Cliente sem nome",
                     status: "ABERTO",
                     mensagens: {
                         create: {
-                            texto: textoMensagem,
+                            texto: textoMensagem || "",
+                            tipo: tipoMidia,
+                            mediaUrl: mediaUrl || null,
+                            mediaName: midiaNome || null,
+                            caption: caption || null,
                             fromMe: false
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             });
             novoAtendimentoCriado = true;
-            console.log(`✅ Novo atendimento criado com ID: ${atendimentoActive.id}`);
         } else {
-            console.log(`🔨 Vinculando mensagem ao atendimento existente ID: ${atendimentoActive.id}`);
-            await prisma.mensagem.create({
-                data: {
-                    atendimentoId: atendimentoActive.id,
-                    texto: textoMensagem,
-                    fromMe: false
-                }
-            });
-            console.log(`📩 Nova mensagem adicionada ao atendimento de: ${nomeCliente}`);
+            console.log(`Adicionando mensagem real ao atendimento existente ID: ${atendimentoActive.id}`);
+            const idAtendimento: string = atendimentoActive.id;
+            await prisma.$transaction([
+                prisma.mensagem.create({
+                    data: {
+                        atendimentoId: atendimentoActive.id,
+                        texto: textoMensagem,
+                        tipo: tipoMidia,
+                        mediaUrl: mediaUrl || null,
+                        mediaName: midiaNome || null,
+                        caption: caption || null,
+                        fromMe: false
+                    }
+                }),
+                prisma.atendimento.update({
+                    where: { id: idAtendimento }  as Prisma.AtendimentoWhereUniqueInput, //as nao necessário
+                    data: {
+                        unreadCount: { increment: 1 },
+                        ...(profilePic && {clienteAvatar: profilePic})
+                    }
+                })
+            ]);
         }
 
         if (novoAtendimentoCriado) {
             const evolutionURL = process.env.EVOLUTION_API_URL || "http://evolution_api:8080";
             const instanceName = body.instance || process.env.EVOLUTION_INSTANCE_NAME || "gui";
             const apiKey = process.env.EVOLUTION_API_KEY || "7996256f-dfb9-4028-9fa3-1ed9a2f8b640";
-
             const protocolo = atendimentoActive.id.slice(-5).toUpperCase();
             const textoResposta = `Olá, ${nomeCliente}! Seu atendimento foi iniciado sob o protocolo nº #${protocolo}. Um atendente humano falará com você em breve.`;
 
             try {
-                const responseEvolution = await fetch(`${evolutionURL}/message/sendText/${instanceName}`, {
+                const destinoJid = remoteJid.includes("@") ? remoteJid : `${remoteJid}@s.whatsapp.net`;
+                await fetch(`${evolutionURL}/message/sendText/${instanceName}`, {
                     method: "POST",
-                    headers: {
-                        'Content-Type': 'application/json',
-                        "apikey": apiKey
-                    },
+                    headers: { 'Content-Type': 'application/json', "apikey": apiKey },
                     body: JSON.stringify({
-                        number: remoteJid,
-                        text: textoResposta,
-                        delay: 1000
+                        whatsappId: destinoJid,
+                        textMessage: { text: textoResposta },
+                        options: { checkContact: false }
                     })
                 });
-
-                if (!responseEvolution.ok) {
-                    console.error(`❌ Erro Evolution API status: ${responseEvolution.status}`);
-                } else {
-                    console.log("🚀 Resposta automatica enviada via Evolution com sucesso!");
-                }
             } catch (fetchError) {
-                console.error("❌ Falha na conexão de envio com a Evolution API:", fetchError);
+                console.error("Falha ao enviar protocolo no fluxo de mensagem:", fetchError);
             }
         }
-
-        return NextResponse.json({ success: true });
-
+        return NextResponse.json({ success: true, fluxo: "mensagem_processada" });
     } catch (error) {
-        console.error("Erro interno no processamento do webhook:", error);
+        console.error("Erro crítico interno no webhook central:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
