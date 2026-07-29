@@ -94,14 +94,14 @@ services:
 
   nextjs:
     build:
-      context: ./client2
+      context: ./client
     container_name: atendimento_next
     networks:
       - nex_networks
     ports:
       - "3000:3000"
     volumes:
-      - ./client2:/app
+      - ./client:/app
       - /app/node_modules
       - /app/.next
     environment:
