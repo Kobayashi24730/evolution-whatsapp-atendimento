@@ -1,0 +1,206 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/libs/prisma";
+import { Prisma } from "@prisma/client";
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export async function POST(request: Request) {
+    try {
+        const body: any = await request.json();
+        const evento = body.event?.toUpperCase();
+        const eventosPermitidos = ["MESSAGES_UPSERT", "MESSAGES.UPSERT", "CONTACTS.UPDATE"];
+        if (!eventosPermitidos.includes(evento)) return NextResponse.json({ status: "ignorado", motivo: `evento_${evento}_nao_suportado` });
+
+        let primeiroDado = null;
+        if (body.data) {
+            if (Array.isArray(body.data)) {
+                if (body.data.length === 0) {
+                    return NextResponse.json({ status: "ignorado", motivo: "dados_array_vazio" });
+                }
+                primeiroDado = body.data[0];
+            } else {
+                primeiroDado = body.data;
+            }
+        }
+
+        if (!primeiroDado) return NextResponse.json({ status: "ignorado", motivo: "dados_nao_encontrados" });
+        const remoteJid = primeiroDado.key?.remoteJid || primeiroDado.remoteJid || primeiroDado.jid || body.sender || "";
+        if (remoteJid.includes("@lid")) return NextResponse.json({ status: "ignorado", motivo: "identificador_interno_lid_ignorado" });
+        if (remoteJid.includes("@g.us")) return NextResponse.json({ status: "ignorado", motivo: "evento_de_grupo_ignorado" });
+        if (remoteJid.includes("@status")) return NextResponse.json({ status: "ignorado", motivo: "evento_de_status_ignorado" });
+        const numeroCliente = remoteJid.includes("@") ? remoteJid.split("@")[0] : remoteJid;
+        const profilePic = primeiroDado.profilePictureUrl || primeiroDado.picture || primeiroDado.avatar ||null;
+        if (!numeroCliente || numeroCliente.trim() === "" || numeroCliente.length < 8) {
+            return NextResponse.json({ status: "ignorado", motivo: "numero_cliente_invalido_ou_curto" });
+        }
+
+        // FLUXO DE CONTATOS (CONTACTS.UPDATE)
+        if (evento === "CONTACTS.UPDATE") {
+            const nomeCliente = primeiroDado.pushName || primeiroDado.name || primeiroDado.verifiedName;
+            const updateData: any = {};
+            if (nomeCliente) updateData.clienteNome = nomeCliente;
+            if (profilePic) updateData.clienteAvatar = profilePic;
+            if (Object.keys(updateData).length > 0) {
+                await prisma.atendimento.updateMany({
+                    where: {
+                        clienteNumero: numeroCliente,
+                        status: { in: ["ABERTO", "ESPERA", "EM_ATENDIMENTO"] }
+                    },
+                    data: updateData
+                });
+            }
+            return NextResponse.json({ success: true, fluxo: "contacts_update_sincronizado" });
+        }
+
+        // FLUXO DE MENSAGENS (MESSAGES.UPSERT)
+        if (primeiroDado.key?.fromMe === true) return NextResponse.json({ status: "ignorado", motivo: "enviada_por_mim" });
+        const messageId = primeiroDado.key?.id || primeiroDado.id || "";
+        const nomeCliente = primeiroDado.pushName || primeiroDado.name || "Cliente sem Nome";
+        const messageObject = primeiroDado.message || {};
+        let textoMensagem = primeiroDado.message?.conversation || primeiroDado.message?.extendedTextMessage?.text ||
+            primeiroDado.text ||
+            primeiroDado.message?.imageMessage?.caption ||
+            primeiroDado.message?.videoMessage?.caption ||
+            "";
+        let mediaUrl = "";
+        let tipoMidia = "TEXTO";
+        let midiaNome = null;
+        let caption = null;
+
+        async function baixarMidia(messageId: string, instanveName: string) {
+            const evolutionIP = process.env.EVOLUTION_IP || "localhost:8080";
+            const instance_name = process.env.INSTANCE_NAME || "anonimo";
+            const API_KEY_SECERT = process.env.API_KEY_SECERT || "";
+            try {
+                const res = await fetch(`${evolutionIP}/chat/getBase64FromMediaMessage/${instance_name}`, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json', "apikey": API_KEY_SECERT },
+                    body: JSON.stringify({message: {key: {id: messageId}}, convertToMp4: false })
+                });
+                const json = await res.json();
+                return json.base64 || json.url || "";
+            } catch {
+                return "";
+            }
+        }
+
+        if (messageObject.imageMessage) {
+            tipoMidia = "IMAGE";
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
+            caption = messageObject.imageMessage.caption || null;
+            textoMensagem = messageObject.imageMessage.caption || "[Imagem recebida]";
+        } else if (messageObject.videoMessage) {
+            tipoMidia = "VIDEO";
+            caption = messageObject.videoMessage.caption || null;
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
+            textoMensagem = messageObject.videoMessage.caption || "[Video recebido]";
+        } else if (messageObject.audioMessage) {
+            tipoMidia = "AUDIO";
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
+            textoMensagem = messageObject.audioMessage.caption || "[Audio recebido]";
+        } else if (messageObject.documentMessage) {
+            tipoMidia = "DOCUMENT";
+            midiaNome = messageObject.documentMessage.fileName || null;
+            caption = messageObject.documentMessage.caption || null;
+            mediaUrl = await baixarMidia(messageId, body.instance || "gui");
+            textoMensagem = messageObject.documentMessage.caption || "[Documento recebido]";
+        }
+
+        if (!textoMensagem && !mediaUrl || textoMensagem.includes("Seu atendimento foi iniciado sob o protocolo")) {
+            return NextResponse.json({ status: "ignorado", motivo: "mensagem_vazia_ou_sistema" });
+        }
+
+        if (messageId) {
+            const mensagemExistente = await prisma.mensagem.findFirst({
+                where: {
+                    texto: textoMensagem,
+                    atendimento: { clienteNumero: numeroCliente },
+                    timestamp: { gte: new Date(Date.now() - 4000) }
+                }
+            });
+            if (mensagemExistente) {
+                return NextResponse.json({ status: "ignorado", motivo: "mensagem_duplicada_bloqueada" });
+            }
+        }
+
+        let atendimentoActive = await prisma.atendimento.findFirst({
+            where: {
+                clienteNumero: numeroCliente,
+                status: { in: ["ABERTO", "TRIAGEM", "EM_ATENDIMENTO"] }
+            }
+        });
+
+        let novoAtendimentoCriado = false;
+        if (!atendimentoActive) {
+            console.log(`Criando novo atendimento direto via Mensagem para ${numeroCliente}...`);
+            atendimentoActive = await prisma.atendimento.create({
+                data: {
+                    clienteNumero: numeroCliente,
+                    clienteNome: nomeCliente || "Cliente sem nome",
+                    status: "ABERTO",
+                    mensagens: {
+                        create: {
+                            texto: textoMensagem || "",
+                            tipo: tipoMidia,
+                            mediaUrl: mediaUrl || null,
+                            mediaName: midiaNome || null,
+                            caption: caption || null,
+                            fromMe: false
+                        },
+                    },
+                },
+            });
+            novoAtendimentoCriado = true;
+        } else {
+            console.log(`Adicionando mensagem real ao atendimento existente ID: ${atendimentoActive.id}`);
+            const idAtendimento: string = atendimentoActive.id;
+            await prisma.$transaction([
+                prisma.mensagem.create({
+                    data: {
+                        atendimentoId: atendimentoActive.id,
+                        texto: textoMensagem,
+                        tipo: tipoMidia,
+                        mediaUrl: mediaUrl || null,
+                        mediaName: midiaNome || null,
+                        caption: caption || null,
+                        fromMe: false
+                    }
+                }),
+                prisma.atendimento.update({
+                    where: { id: idAtendimento }  as Prisma.AtendimentoWhereUniqueInput, //as nao necessário
+                    data: {
+                        unreadCount: { increment: 1 },
+                        ...(profilePic && {clienteAvatar: profilePic})
+                    }
+                })
+            ]);
+        }
+
+        if (novoAtendimentoCriado) {
+            const evolutionIP = process.env.EVOLUTION_IP || "localhost:8080";
+            const instance_name = process.env.INSTANCE_NAME || "anonimo";
+            const API_KEY_SECERT = process.env.API_KEY_SECERT || "";
+            const protocolo = atendimentoActive.id.slice(-5).toUpperCase();
+            const textoResposta = `Olá, ${nomeCliente}! Seu atendimento foi iniciado sob o protocolo nº #${protocolo}. Um atendente humano falará com você em breve.`;
+
+            try {
+                const destinoJid = remoteJid.includes("@") ? remoteJid : `${remoteJid}@s.whatsapp.net`;
+                await fetch(`${evolutionIP}/message/sendText/${instance_name}`, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json', "apikey": API_KEY_SECERT },
+                    body: JSON.stringify({
+                        whatsappId: destinoJid,
+                        textMessage: { text: textoResposta },
+                        options: { checkContact: false }
+                    })
+                });
+            } catch (fetchError) {
+                console.error("Falha ao enviar protocolo no fluxo de mensagem:", fetchError);
+            }
+        }
+        return NextResponse.json({ success: true, fluxo: "mensagem_processada" });
+    } catch (error) {
+        console.error("Erro crítico interno no webhook central:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
