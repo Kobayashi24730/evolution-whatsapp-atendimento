@@ -95,6 +95,8 @@ services:
   nextjs:
     build:
       context: ./client
+    env_file:
+      - ./client/.env
     container_name: atendimento_next
     networks:
       - nex_networks

@@ -30,7 +30,7 @@ export default function Header() {
     const pathname = usePathname();
     useEffect(() => {
         if (status === "loading") return;
-        if (status === "unauthenticated" && pathname !== "\login") {
+        if (status === "unauthenticated" && pathname !== "/login") {
             router.push("/login");
         }
     }, [status, pathname]);

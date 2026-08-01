@@ -8,10 +8,10 @@ import {
     ChevronRight
 } from "lucide-react";
 
-// ── Tipos ──────────────────────────────────────────────
+
 type Section = "perfil" | "notificacoes" | "whatsapp" | "aparencia" | "seguranca";
 
-// ── Componente de seção com título ──────────────────────
+
 function SectionCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
     return (
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
@@ -26,7 +26,6 @@ function SectionCard({ title, description, children }: { title: string; descript
     );
 }
 
-// ── Campo de input reutilizável ─────────────────────────
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
     return (
         <div className="flex flex-col gap-1.5">
@@ -73,6 +72,7 @@ export default function ConfiguracoesPage() {
     // Perfil
     const [nome, setNome] = useState(session?.user?.name ?? "");
     const [email, setEmail] = useState(session?.user?.email ?? "");
+    const [newEmail, setNewEmail] = useState(session?.user?.email ?? "");
 
     // Notificações
     const [notifSom, setNotifSom]       = useState(true);
@@ -101,7 +101,12 @@ export default function ConfiguracoesPage() {
 
     // Feedback de salvo
     const [saved, setSaved] = useState(false);
-    const handleSave = () => {
+    const handleSave = async () => {
+        const response = await fetch("api/user", {
+            method: "PUT",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, email, newEmail })
+        });
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
     };
@@ -171,7 +176,7 @@ export default function ConfiguracoesPage() {
                                         <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                     </Field>
                                     <Field label="E-mail" hint="Usado para login e notificações">
-                                        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="email@exemplo.com" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                        <input value={email} onChange={(e) => setNewEmail(e.target.value)} type="email" placeholder="email@exemplo.com" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                     </Field>
                                 </SectionCard>
                             </>

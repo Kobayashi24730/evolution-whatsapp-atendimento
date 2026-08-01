@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, User, Hash, Phone, Loader2, SearchX } from "lucide-react";
+import ChatWindow from "@/components/search/ChatWindow";
 
 interface Card {
     id: string | number;
@@ -24,6 +25,8 @@ export default function Procurar() {
     const [data, setData] = useState<Card[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [openChatWindow, setOpenChatWindow] = useState(false);
+    const [chatId, setChatId] = useState<number | null>(null);
 
     useEffect(() => {
         async function getValues() {
@@ -81,6 +84,12 @@ export default function Procurar() {
                 </p>
             )}
 
+            {openChatWindow && (
+                <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center">
+                    <ChatWindow id={chatId} />
+                </div>
+            )}
+
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
                     <Loader2 size={28} className="text-blue-500 animate-spin" />
@@ -104,7 +113,10 @@ export default function Procurar() {
                         return (
                             <div
                                 key={i.id}
-                                onClick={() => router.push(`/atendimento/${i.id}`)}
+                                onClick={() => {
+                                    setOpenChatWindow(true);
+                                    setChatId(i.id);
+                                }}
                                 className="group bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all duration-150 cursor-pointer flex flex-col gap-3"
                             >
                                 <div className="flex items-center justify-between">

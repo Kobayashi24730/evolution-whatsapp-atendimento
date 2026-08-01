@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const email = searchParams.get("email");
-        const password = searchParams.get("password"); //! password amostra corrigir ainda..
+        const password = searchParams.get("password"); //! password amostra,corrigir ainda..
         if (!email || !password) {
             return NextResponse.json({ message: "Missing email or password" }, { status: 400 });
         }
@@ -61,3 +61,40 @@ export async function GET(request: Request) {
         return NextResponse.json({ message: "Failed in get user"}, {status: 500});
     }
 }
+
+export async function PUT(request: Request) {
+    const session = await validateSession(); //? verifica se o usuario esta autenticado
+    if (!session) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    try {
+        const { nome, email, newEmail } = await request.json();
+        if (!nome || !email) {
+            return NextResponse.json({ message: "Missing name or email" }, { status: 400 });
+        }
+        const user = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+        // ? verifica se o user existe se não existe retorna 404
+        if (!user) {
+            return NextResponse.json({message: "User not exists"}, {status: 404});
+        }
+        const update = await prisma.user.update({
+            where: {
+                email: email
+            },
+            data: {
+                name: nome,
+                email: newEmail
+            }
+        });
+
+        return NextResponse.json({ message: "Success in update user"}, {status: 200});
+    } catch (err) {
+        console.error("Failed in update user, error line: ", err);
+        return NextResponse.json({ message: "Failed in update user"}, {status: 500});
+    }
+}
+

@@ -27,7 +27,7 @@ export default function dropdown({status, onSelect}: Dropdown) {
                 onClick={(e) => setIsOpen(!isOpen)}
             >
                 <span>{status}</span>
-                <span className={`text - [10px] transition-transform duration-200 ease-in-out ${isOpen ? "rotate-180" : "rotate-0"}`}>▼</span>
+                <span className={`inline-block text-[10px] transition-transform duration-200 ease-in-out origin-center ${isOpen ? "rotate-180" : ""}`}>▼</span>
             </button>
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10 animate-in fade-in zoom-in-95 duration-100">
