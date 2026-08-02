@@ -1,22 +1,12 @@
 'use client';
 
 import { ChartAtendimentos } from "@/components/Chart";
+import FilaUrgestes from "@/components/dashboard/Fila";
+import { KpiProps } from "@/types/types";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
-import {
-    Headphones, Clock, CheckCircle, AlertTriangle,
-    MessageSquare, Timer, XCircle, ChevronRight,
-    Newspaper, AlertCircle, ArrowUpRight, Loader2
-} from "lucide-react";
+import { Headphones, Clock, CheckCircle, AlertTriangle, MessageSquare, Timer, XCircle, Newspaper } from "lucide-react";
+import { Widget } from "@/components/common/widget";
 
-interface KpiProps {
-    label: string;
-    value: number;
-    icon: React.ElementType;
-    bg: string;
-    iconBg: string;
-}
-
-// ── KPI Card Component ───────────────────────────────────
 function KpiCard({ label, value, icon: Icon, bg, iconBg }: KpiProps) {
     return (
         <div className={`relative flex items-center justify-between p-4 rounded-xl text-white shadow-sm overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${bg}`}>
@@ -34,29 +24,6 @@ function KpiCard({ label, value, icon: Icon, bg, iconBg }: KpiProps) {
     );
 }
 
-// ── Widget Wrapper Component ─────────────────────────────
-function Widget({ title, icon: Icon, children, className = "" }: { title: string; icon?: React.ElementType; children: React.ReactNode; className?: string }) {
-    return (
-        <div className={`bg-white border border-gray-200/70 rounded-2xl shadow-sm overflow-hidden flex flex-col ${className}`}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                <div className="flex items-center gap-2">
-                    {Icon && <Icon size={16} className="text-gray-500" />}
-                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">{title}</h3>
-                </div>
-                <button
-                    type="button"
-                    aria-label="Opções do widget"
-                    className="p-1 rounded-md hover:bg-gray-200/60 transition-colors text-gray-400 hover:text-gray-600"
-                >
-                    <ChevronRight size={14} />
-                </button>
-            </div>
-            <div className="flex-1 overflow-hidden">
-                {children}
-            </div>
-        </div>
-    );
-}
 
 export default function DashboardChamados() {
     const { stats, loading } = useDashboardStats();
@@ -67,7 +34,6 @@ export default function DashboardChamados() {
         { data: "24/08", hora: "14:51", titulo: "Treinamento em SIAGRO",        descricao: "Nova sessão marcada para a próxima semana." },
     ];
 
-    // Mapeamento seguro dos KPIs
     const kpis: KpiProps[] = [
         { label: "Chamados abertos",                          value: stats?.kpis?.totalAbertos ?? 0,          icon: Headphones,   bg: "bg-blue-600",   iconBg: "bg-blue-500"   },
         { label: "Aguardando aprovação",                      value: stats?.kpis?.aguardandoAprovacao ?? 0,  icon: Clock,        bg: "bg-slate-700",  iconBg: "bg-slate-600"  },
@@ -97,43 +63,8 @@ export default function DashboardChamados() {
                         <ChartAtendimentos />
                     </div>
 
-                    {/* Fila / Notícias */}
-                    <div className="space-y-6">
-                        <Widget title="Prioridade / Fila de Espera" icon={AlertCircle}>
-                            {loading ? (
-                                <div className="p-6 flex justify-center text-gray-400">
-                                    <Loader2 size={20} className="animate-spin" />
-                                </div>
-                            ) : stats?.filaCritica && stats.filaCritica.length > 0 ? (
-                                <ul className="divide-y divide-gray-100">
-                                    {stats.filaCritica.map((item) => (
-                                        <li key={item.id} className="p-3.5 hover:bg-gray-50/80 transition-colors cursor-pointer group flex items-center justify-between">
-                                            <div className="min-w-0 pr-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-gray-900">{item.id}</span>
-                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                                        item.prioridade === "URGENTE" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700"
-                                                    }`}>
-                                                        {item.prioridade}
-                                                    </span>
-                                                </div>
-                                                <p className="text-xs font-medium text-gray-700 mt-0.5 truncate">{item.cliente}</p>
-                                                <p className="text-[11px] text-gray-400 truncate">{item.assunto}</p>
-                                            </div>
-
-                                            <div className="text-right shrink-0">
-                                                <span className="text-[11px] font-bold text-rose-500 block">{item.tempoEspera}</span>
-                                                <ArrowUpRight size={14} className="text-gray-300 group-hover:text-blue-600 transition-colors ml-auto mt-1" />
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="p-6 text-center text-xs text-gray-400">
-                                    Nenhum chamado pendente no momento.
-                                </div>
-                            )}
-                        </Widget>
+                    <div>
+                        <FilaUrgestes />
 
                         <Widget title="Últimas Notícias" icon={Newspaper}>
                             <ul className="divide-y divide-gray-100">

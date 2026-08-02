@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, User, Hash, Phone, Loader2, SearchX } from "lucide-react";
+import { Search, User, Hash, Phone, Loader2, SearchX, X } from "lucide-react";
 import ChatWindow from "@/components/search/ChatWindow";
 
 interface Card {
@@ -45,6 +45,14 @@ export default function Procurar() {
         getValues();
     }, []);
 
+    useEffect(() => {
+        const handleKeyDow = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setOpenChatWindow(false);
+        }
+        window.addEventListener("keydown", handleKeyDow);
+        return () => window.removeEventListener("keydown", handleKeyDow);
+    }, []);
+
     const filteredData = data.filter((i) => {
         const termo = search.toLowerCase();
         return (
@@ -85,8 +93,18 @@ export default function Procurar() {
             )}
 
             {openChatWindow && (
-                <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center">
-                    <ChatWindow id={chatId} />
+                <div onClick={() => setOpenChatWindow(false)} className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-4xl">
+                        <button
+                            onClick={() => setOpenChatWindow(false)}
+                            className="absolute -top-3 -right-3 z-10 p-2 bg-white text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full shadow-md border border-gray-200 transition-colors focus:outline-none"
+                            title="Fechar (Esc)"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        <ChatWindow id={Number(chatId)} />
+                    </div>
                 </div>
             )}
 

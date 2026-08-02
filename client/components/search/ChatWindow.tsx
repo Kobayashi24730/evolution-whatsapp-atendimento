@@ -2,50 +2,63 @@
 
 import {useEffect, useState} from "react";
 import {Images, MessageSquareDashed, Paperclip, Send} from "lucide-react";
-import Dropdown from "@/components/Dropdown";
 import UseAudio from "@/components/atendimento/useAudio";
+import {ChatWindowProps} from "@/types/types";
 
-export default function ChatWindow(id: Number) {
+
+const statusStyles: Record<string, { badge: string; dot: string }> = {
+    ABERTO:         { badge: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-400" },
+    EM_ATENDIMENTO: { badge: "bg-blue-50   text-blue-700   border-blue-200",     dot: "bg-blue-400"    },
+    TRIAGEM:        { badge: "bg-amber-50  text-amber-700  border-amber-200",    dot: "bg-amber-400"   },
+    FECHADO:        { badge: "bg-gray-100  text-gray-500   border-gray-200",     dot: "bg-gray-300"    },
+    AGUARDANDO:     { badge: "bg-purple-50 text-purple-700 border-purple-200",   dot: "bg-purple-400"  },
+};
+const statusDefault = { badge: "bg-gray-100 text-gray-600 border-gray-200", dot: "bg-gray-300" };
+const statusLabel: Record<string, string> = {
+    ABERTO:         "Aberto",
+    EM_ATENDIMENTO: "Em atendimento",
+    TRIAGEM:        "Triagem",
+    FECHADO:        "Fechado",
+    AGUARDANDO:     "Aguardando",
+};
+
+
+export default function ChatWindow({id}: ChatWindowProps) {
     const [data, setData] = useState<any>(null);
     const [mensagens, setMensagem] = useState<any>([]);
 
     useEffect(() => {
         searchAtendimento();
-    }, []);
+    }, [id]);
 
     const searchAtendimento = async () => {
         try {
-            const response = await fetch("api/atendimentos", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                }
-            });
-            const data = await response.json();
-            const item = data.filter((i: any) => i.id === id);
+            const response = await fetch("/api/atendimento");
+            if (!response.ok) {
+                throw new Error("Erro ao buscar atendimento");
+            }
+            const lista = await response.json();
+            const item = lista.data.find((i: any) => i.id === id);
             setData(item);
+            if (item) {
+                getMensagems(item.id);
+            }
         } catch (error) {
-            console.error("Erro ao buscar atendimento:", error);
+            console.log(error);
         }
     }
 
-    const getMensagems = async ()=> {
-        if (!data?.id) return;
-        try {
-            const response = await fetch(`/api/menssagens?atendimentoId=${data.id}`, {
-                method: "GET",
-                headers: { 'Content-Type': 'application/json' },
-            });
-            const res = await response.json();
-            if (res && Array.isArray(res.data)) {
-                setMensagem(res.data);
-            } else {
-                setMensagem([]);
-            }
-        } catch (err) {
-            console.error("Erro ao buscar mensagens:", err);
-        }
+    const getMensagems = async (id: any)=> {
+        const response = await fetch(`/api/menssagens?atendimentoId=${id}`, {
+            method: "GET",
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const res = await response.json();
+        console.log(res);
+        setMensagem(res.data ?? []);
     }
+
+    const style = data?.status ? (statusStyles[data.status]) : statusDefault;
     return (
         <div className="lg:col-span-8 h-[calc(100vh-150px)] flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
             {data ? (
@@ -64,7 +77,6 @@ export default function ChatWindow(id: Number) {
                                         <span className="text-sm font-bold text-blue-600">{data.clienteNome?.charAt(0).toUpperCase() ?? "?"}</span>
                                     )}
                                 </div>
-                                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
                             </div>
 
                             <div className="min-w-0">
@@ -82,8 +94,9 @@ export default function ChatWindow(id: Number) {
                             </button>
 
                             <div className="w-px h-5 bg-gray-200 mx-1" />
-
-                            <span>{data.status}</span>
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${style.badge}`}>
+                                {statusLabel[data.status] ?? data.status}
+                            </span>
                         </div>
                     </div>
 
@@ -208,6 +221,14 @@ export default function ChatWindow(id: Number) {
                                 <p className="text-sm text-gray-400">Nenhuma mensagem ainda</p>
                             </div>
                         )}
+                    </div>
+                    <div className="flex items-center justify-center text-xs sm:text-sm text-gray-500 border-t border-gray-100 pt-4 mt-2 text-center">
+                        <p className="flex items-center gap-1.5 flex-wrap justify-center">
+                            <span>Para enviar uma mensagem, clique no botão</span>
+                            <button className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 hover:text-blue-700 active:scale-95 transition-all cursor-pointer">
+                                Ir para chat →
+                            </button>
+                        </p>
                     </div>
                 </>
             ) : (

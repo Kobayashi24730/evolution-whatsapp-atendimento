@@ -1,30 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from "react";
-
-// Tipagem exata baseada nos dados do Prisma e na interface da Dashboard
-export interface DashboardKPIs {
-    totalAbertos: number;
-    aguardandoAprovacao: number;
-    concluidos: number;
-    vencidos: number;
-    respostaVencida: number;
-    aVencerHoje: number;
-    meusVencidos: number;
-}
-
-export interface ChamadoCritico {
-    id: string;
-    cliente: string;
-    tempoEspera: string;
-    prioridade: "ALTA" | "URGENTE";
-    assunto: string;
-}
-
-export interface DashboardStatsData {
-    kpis: DashboardKPIs;
-    filaCritica: ChamadoCritico[];
-}
+import { DashboardStatsData, ChamadoCritico, DashboardKPIs } from "@/types/types";
 
 // Objeto de fallback padrão para evitar exceções de 'undefined' na renderização
 const defaultStats: DashboardStatsData = {
@@ -84,10 +61,7 @@ export function useDashboardStats() {
 
     useEffect(() => {
         fetchStats();
-
-        // Polling de 10 segundos: leve e suficiente para métricas de operabilidade
         const intervalId = setInterval(fetchStats, 10000);
-
         return () => clearInterval(intervalId);
     }, [fetchStats]);
 
