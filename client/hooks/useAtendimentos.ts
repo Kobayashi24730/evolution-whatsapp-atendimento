@@ -57,7 +57,7 @@ export function useAtendimentos() {
     async function getMensagems() {
         if (!atendimentoAtivo?.id) return;
         try {
-            const response = await fetch(`/api/menssagens?atendimentoId=${atendimentoAtivo.id}`, {
+            const response = await fetch(`/api/mensagens?atendimentoId=${atendimentoAtivo.id}`, {
                 method: "GET",
                 headers: { 'Content-Type': 'application/json' },
             });

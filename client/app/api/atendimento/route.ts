@@ -95,7 +95,7 @@ export async function PUT(request: Request) {
         if (Boolean(by) === true) {
             const evolutionURL = process.env.EVOLUTION_API_URL || "http://evolution_api:8080";
             const instanceName = process.env.INSTANCE_NAME || "gui";
-            const apikey = process.env.INSTANCE_API_KEY || "7996256f-dfb9-4028-9fa3-1ed9a2f8b640";
+            const apikey = process.env.INSTANCE_API_KEY || "SUA INSTANCIA";
             try {
                 const destinoJid = data.clienteNumero.includes("@") ? data.clienteNumero : `${data.clienteNumero}@s.whatsapp.net`;
                 const payload = {
