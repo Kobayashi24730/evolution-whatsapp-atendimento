@@ -3,13 +3,12 @@ import React from "react";
 
 
 export interface ChatWindowProps {
-    id: number;
+    id: string;
 }
 
 export type AtendimentoComTipo = Prisma.AtendimentoGetPayload<{
     include: {
         mensagens: true;
-        etiquetas: true;
     }
 }>;
 

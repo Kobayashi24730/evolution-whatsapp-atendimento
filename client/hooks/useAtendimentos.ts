@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import {useState, useEffect, useCallback, useMemo} from "react";
 
 declare module "next-auth" {
     interface Session {
@@ -21,7 +21,6 @@ declare module "next-auth/jwt" {
     }
 }
 
-
 export function useAtendimentos() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -31,14 +30,13 @@ export function useAtendimentos() {
     const [mensagem, setMensagem] = useState<any[]>([]);
     const [msg, setMsg] = useState<string>("");
     const [idAtendimentoAtivo, setIdAtendimentoAtivo] = useState<string | null>(null);
-    const atendimentoAtivo = data.find(item => item.id === idAtendimentoAtivo) || data[0];
-    useEffect(() => {
-        if (data.length > 0 && !idAtendimentoAtivo) {
-            setIdAtendimentoAtivo(data[0].id);
-        }
+    const atendimentoAtivo = useMemo(() => {
+        if (!data.length) return null;
+        return data.find(item => item.id === idAtendimentoAtivo) ?? null;
     }, [data, idAtendimentoAtivo]);
 
-    async function getAtendimentos() {
+
+    const getAtendimentos = useCallback(async () => {
         try {
             const response = await fetch("/api/atendimento", {
                 method: "GET",
@@ -47,30 +45,32 @@ export function useAtendimentos() {
             const res = await response.json();
             if (res && Array.isArray(res.data)) {
                 setData(res.data);
+                setIdAtendimentoAtivo(prevId => {
+                    if (prevId && res.data.some((item: any) => item.id === prevId)) {
+                        return prevId;
+                    }
+                    return res.data[0]?.id ?? null;
+                });
             }
             console.log(res);
         } catch (err) {
             console.error("Erro ao buscar atendimentos:", err);
         }
-    }
+    }, []);
 
-    async function getMensagems() {
-        if (!atendimentoAtivo?.id) return;
+    const getMensagems = useCallback(async (atendimentoAtivo: string) => {
+        if (!atendimentoAtivo) return;
         try {
-            const response = await fetch(`/api/mensagens?atendimentoId=${atendimentoAtivo.id}`, {
+            const response = await fetch(`/api/mensagens?atendimentoId=${atendimentoAtivo}`, {
                 method: "GET",
                 headers: { 'Content-Type': 'application/json' },
             });
             const res = await response.json();
-            if (res && Array.isArray(res.data)) {
-                setMensagem(res.data);
-            } else {
-                setMensagem([]);
-            }
+            setMensagem(Array.isArray(res?.data) ? res.data : []);
         } catch (err) {
             console.error("Erro ao buscar mensagens:", err);
         }
-    }
+    }, []);
 
     useEffect(() => {
         getAtendimentos();
@@ -81,12 +81,16 @@ export function useAtendimentos() {
     }, []);
 
     useEffect(() => {
-        getMensagems();
+        if (!atendimentoAtivo?.id) {
+            setMensagem([]);
+            return;
+        }
+        getMensagems(atendimentoAtivo.id);
         const intervalGetMessagesn = setInterval(() => {
-            getMensagems();
+            getMensagems(atendimentoAtivo.id);
         }, 3000);
         return () => clearInterval(intervalGetMessagesn);
-    }, [atendimentoAtivo?.id]);
+    }, [atendimentoAtivo?.id, getMensagems]);
 
     async function submitInfos() {
         if (!msg.trim() || !atendimentoAtivo?.id) {
@@ -103,7 +107,7 @@ export function useAtendimentos() {
                 body: JSON.stringify({ mensagens: values, atendimentoId: atendimentoAtivo.id, by: true})
             });
             await response.json();
-            getMensagems();
+            getMensagems(atendimentoAtivo.id);
         } catch (err) {
             console.error("Erro ao enviar mensagem:", err);
         }
@@ -145,9 +149,6 @@ export function useAtendimentos() {
         }
     }
 
-    function onCartNewChat () {
-        setIsOpen(true);
-    }
     return {
         data,
         mensagem,

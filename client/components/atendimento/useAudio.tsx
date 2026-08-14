@@ -81,7 +81,7 @@ export default function UseAudio({m}: { m: any }) {
                     />
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-muted-foreground px-0.5">
-                    <span>{formatTime(isPlay ? currentTime : duracao)}</span>
+                    <span>{formatTime(currentTime)}</span>
                     <div className="flex items-center gap-1">
                         <Mic className={`w-3 h-3 ${isPlay ? "text-emerald-500 animate-pulse" : "text-muted-foreground"}`}/>
                     </div>

@@ -19,5 +19,5 @@ export function formatarTempoCorrido(stringData?: string | Date | null) {
   const dias = Math.floor(horas / 24);
   if (dias === 1) return 'ontem';
   if (dias < 7) return `Há ${dias} dias`;
-  else return `${date}`;
+  else return date.toLocaleDateString('pt-BR');
 }

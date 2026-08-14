@@ -1,7 +1,6 @@
 'use client';
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import LoginForm from "@/app/login/page";
 import {useEffect} from "react";
 import {usePathname, useRouter} from "next/navigation";
 import {
@@ -74,7 +73,7 @@ export default function Header() {
                 <div className="w-full border-t bg-gray-50/50 py-1.5 px-4">
                     <div className="max-w-7xl mx-auto flex items-center justify-end gap-1">
                         {iconsTopBar.map(({icon: Component, label}, index) => (
-                            <button key={index} title={label} onClick={() => router.push(`${label}`)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-150">
+                            <button key={index} title={label} onClick={() => router.push(`/${label}`)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-150">
                                 <Component className="w-5 h-5" />
                             </button>
                         ))}

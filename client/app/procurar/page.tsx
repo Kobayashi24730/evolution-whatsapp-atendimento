@@ -26,7 +26,7 @@ export default function Procurar() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [openChatWindow, setOpenChatWindow] = useState(false);
-    const [chatId, setChatId] = useState<number | null>(null);
+    const [chatId, setChatId] = useState<string | null>(null);
 
     useEffect(() => {
         async function getValues() {
@@ -103,7 +103,7 @@ export default function Procurar() {
                             <X size={18} />
                         </button>
 
-                        <ChatWindow id={Number(chatId)} />
+                        <ChatWindow id={String(chatId)} />
                     </div>
                 </div>
             )}

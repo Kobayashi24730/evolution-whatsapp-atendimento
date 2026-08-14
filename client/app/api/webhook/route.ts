@@ -68,7 +68,7 @@ export async function POST(request: Request) {
         let caption = null;
 
         async function baixarMidia(messageId: string, instanveName: string) {
-            const evolutionIP = process.env.EVOLUTION_IP || "localhost:8080";
+            const evolutionIP = process.env.EVOLUTION_IP || "http://localhost:8080";
             const instance_name = process.env.INSTANCE_NAME || "anonimo";
             const API_KEY_SECERT = process.env.API_KEY_SECERT || "";
             try {

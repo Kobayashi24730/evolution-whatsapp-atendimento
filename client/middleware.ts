@@ -9,8 +9,7 @@ export default withAuth(
             token: process.env.UPSTASH_REDIS_REST_TOKEN?.substring(0, 10),
         });
         const ip =
-            request.ip ||
-            request.headers.get("x-forwarded-for")?.split(",")[0] ||
+            request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
             request.headers.get("cf-connecting-ip") ||
             "127.0.0.1";
 
@@ -30,4 +29,4 @@ export default withAuth(
     }
 );
 
-export const config = { matcher: ["/atendimento"] };
+export const config = { matcher: ["/atendimento", "/dashboard", "/procurar", "/configuracoes"] };

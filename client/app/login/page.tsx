@@ -61,20 +61,26 @@ export default function LoginForm() {
         } else {
             try {
                 setLoading(true);
-                const res = await fetch("api/user", {
+                setError(null);
+                const res = await fetch("/api/user", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({email: values.email, password: values.password})
                 });
-                const data = res.json();
+                const data = await res.json();
                 if (!res.ok) {
-                    setError("User register failed");
+                    setError(data?.message || "Falha ao registrar usuário.");
+                    return;
                 }
-                await signIn("credentials", {
+                const singInResult = await signIn("credentials", {
                     redirect: false,
                     email: values.email,
                     password: values.password,
                 });
+                if (singInResult?.error) {
+                    setError("Conta criada, mas ocorreu um erro ao fazer login automático.");
+                    return;
+                }
                 router.refresh();
                 router.push("/atendimento");
             } catch (error) {
@@ -83,7 +89,7 @@ export default function LoginForm() {
                 setLoading(false);
             }
         }
-        }
+    }
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -91,13 +97,7 @@ export default function LoginForm() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4">
                     <div className="flex justify-end mb-6">
                         <button
-                            onClick={() =>
-                                setTypeForm(
-                                    typeForm === "login"
-                                        ? "register"
-                                        : "login"
-                                )
-                            }
+                            onClick={() => setTypeForm(typeForm === "login" ? "register" : "login")}
                             className="text-sm text-blue-600 hover:text-blue-800 transition"
                         >
                             {typeForm === "login"
