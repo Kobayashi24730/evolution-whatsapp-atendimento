@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { DashboardStatsData, ChamadoCritico, DashboardKPIs } from "@/types/types";
 
-// Objeto de fallback padrão para evitar exceções de 'undefined' na renderização
 const defaultStats: DashboardStatsData = {
     kpis: {
         totalAbertos: 0,
@@ -24,7 +23,7 @@ export function useDashboardStats() {
 
     const fetchStats = useCallback(async () => {
         try {
-            const response = await fetch("/api/dashboard/status", {
+            const response = await fetch("/api/dashboard/stats", {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });

@@ -1,4 +1,4 @@
-const API_EVOLUTION =  process.env.EVOLUTION_API_URL || "localhost:8080"
+const API_EVOLUTION =  process.env.EVOLUTION_API_URL || "http://localhost:8080"
 export async function getChats() {
     const response = await fetch(API_EVOLUTION, {
         headers: {

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {useSession} from "next-auth/react";
 import "next-auth";
-import "next-auth/jwt";
 
 declare module "next-auth" {
     interface Session {
@@ -37,7 +36,7 @@ export default function ChatCard({ onClose, data }: ChatCardProps) {
         setLoading(true);
         try {
             const userId = session?.user?.id;
-            const response = await fetch("api/atendimento", {
+            const response = await fetch("/api/atendimento", {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ clienteNumero: "99999999999" ,clienteNome, userId })
