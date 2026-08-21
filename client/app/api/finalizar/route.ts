@@ -20,9 +20,9 @@ export async function POST(request: Request) {
             }
         });
 
-        const evolutionIP = process.env.EVOLUTION_IP || "http://localhost:8080";
-        const instance_name = process.env.INSTANCE_NAME || "anonimo";
-        const API_KEY_SECERT = process.env.API_KEY_SECERT || "";
+        const evolutionIP = process.env.EVOLUTION_API_URL || "http://localhost:8080";
+        const instance_name = process.env.EVOLUTION_INSTANCE_NAME  || "anonimo";
+        const API_KEY_SECERT = process.env.EVOLUTION_API_KEY || "";
 
         const evo_response = await fetch(`${evolutionIP}/message/sendText/${instance_name}`, {
             method: "POST",
