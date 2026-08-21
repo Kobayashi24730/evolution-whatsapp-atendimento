@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
         const atendimento = await prisma.atendimento.findMany({
             where: {
-                status: {in: ["ABERTO", "ESPERA", "EM_ATENDIMENTO", "TRIAGEM", "AGUARDANDO"]},
+                status: {in: ["ABERTO", "ESPERA", "EM_ATENDIMENTO", "TRIAGEM", "AGUARDANDO_HUMANO", "AGUARDANDO_CLIENTE"]},
                 ...(clienteNumero && {clienteNumero}),
                 ...(clienteNome && {clienteNome}),
                 ...(userId && {

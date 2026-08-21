@@ -1,8 +1,13 @@
 // app/api/dashboard/stats/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
+import { validateSession } from "@/libs/auth";
 
 export async function GET() {
+    const session = await validateSession();
+    if (!session) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
     try {
         // Executa todas as consultas de agregados em paralelo usando o schema exato
         const [
@@ -16,10 +21,10 @@ export async function GET() {
                 where: { status: { in: ["ABERTO", "EM_ATENDIMENTO", "TRIAGEM"] } }
             }),
             prisma.atendimento.count({
-                where: { status: { in: ["FINALIZADO", "CONCLUIDO"] } }
+                where: { status: { in: ["FINALIZADO", "RESOLVIDO"] } }
             }),
             prisma.atendimento.count({
-                where: { status: { in: ["AGUARDANDO", "AGUARDANDO_HUMANO"] } }
+                where: { status: { in: ["AGUARDANDO_HUMANO", "AGUARDANDO_CLIENTE"] } }
             }),
             prisma.atendimento.findMany({
                 where: {

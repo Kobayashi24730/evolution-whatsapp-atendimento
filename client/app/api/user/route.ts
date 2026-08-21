@@ -29,39 +29,6 @@ export async function POST(request: Request) {
     }
 };
 
-export async function GET(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const email = searchParams.get("email");
-        const password = searchParams.get("password"); //! password amostra,corrigir ainda..
-        if (!email || !password) {
-            return NextResponse.json({ message: "Missing email or password" }, { status: 400 });
-        }
-        const user = await prisma.user.findUnique({
-            where: {
-                email: email
-            }
-        });
-        // ? verifica se o user existe se não existe retorna 404
-        if (!user) {
-            return NextResponse.json({message: "User not exists"}, {status: 404});
-        }
-        if (!user.password) return null;
-        const isValidPassord = await bcrypt.compare(password.trim(), user.password);
-        if (!isValidPassord) {
-            return NextResponse.json({message: "Invalid password"}, {status: 401});
-        }
-        return NextResponse.json({
-            id: user.id,
-            name: user.name,
-            email: user.email
-        })
-    } catch (err) {
-        console.error("Failed in get user, error line: ", err);
-        return NextResponse.json({ message: "Failed in get user"}, {status: 500});
-    }
-}
-
 export async function PUT(request: Request) {
     const session = await validateSession(); //? verifica se o usuario esta autenticado
     if (!session) {
@@ -81,13 +48,24 @@ export async function PUT(request: Request) {
         if (!user) {
             return NextResponse.json({message: "User not exists"}, {status: 404});
         }
+        let targetEmail = email;
+        if (newEmail && newEmail !== null) {
+            const verifyExistsEmail = await prisma.user.findUnique({
+                where: { email: newEmail }
+            });
+            if (verifyExistsEmail) {
+                return NextResponse.json({ message: "Email already exists" }, { status: 400 });
+            }
+            targetEmail = newEmail;
+        }
+
         const update = await prisma.user.update({
             where: {
                 email: email
             },
             data: {
                 name: nome,
-                email: newEmail
+                email: targetEmail
             }
         });
 

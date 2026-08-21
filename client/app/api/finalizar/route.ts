@@ -30,9 +30,18 @@ export async function POST(request: Request) {
             body: JSON.stringify({
                 number: response.clienteNumero.split('@')[0],
                 text: "Este atendimento foi encerrado. Obrigado pelo contato! Se precisar de algo mais, basta enviar uma nova mensagem.",
-                delay: 1200
+                options: { delay: 1200, presence: "composing", checkContact: false }
             })
         });
+
+        if (!evo_response.ok) {
+            const errorData = await evo_response.text();
+            console.error("Falha ao enviar mensagem na Evolution API:", errorData);
+            return NextResponse.json({
+                error: "Atendimento finalizado no banco, mas falhou ao enviar mensagem de encerramento via WhatsApp.",
+                details: errorData
+            }, { status: 502 });
+        }
 
         return NextResponse.json({ success: true, message: "Atendimento finalizado com sucesso" });
     } catch (err) {

@@ -14,6 +14,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const metadata: Metadata = {
+  title: "NEX Atendimento",
+  description: "Central de atendimento via WhatsApp",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

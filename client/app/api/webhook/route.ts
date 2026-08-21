@@ -177,9 +177,9 @@ export async function POST(request: Request) {
         }
 
         if (novoAtendimentoCriado) {
-            const evolutionIP = process.env.EVOLUTION_IP || "http://localhost:8080";
-            const instance_name = process.env.INSTANCE_NAME || "anonimo";
-            const API_KEY_SECERT = process.env.API_KEY_SECERT || "";
+            const evolutionIP = process.env.EVOLUTION_API_URL || "http://localhost:8080";
+            const instance_name = process.env.EVOLUTION_INSTANCE_NAME || "anonimo";
+            const API_KEY_SECERT = process.env.EVOLUTION_API_KEY || "";
             const protocolo = atendimentoActive.id.slice(-5).toUpperCase();
             const textoResposta = `Olá, ${nomeCliente}! Seu atendimento foi iniciado sob o protocolo nº #${protocolo}. Um atendente humano falará com você em breve.`;
 
@@ -189,9 +189,13 @@ export async function POST(request: Request) {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json', "apikey": API_KEY_SECERT },
                     body: JSON.stringify({
-                        whatsappId: destinoJid,
-                        textMessage: { text: textoResposta },
-                        options: { checkContact: false }
+                        number: destinoJid,
+                        text: textoResposta,
+                        options: {
+                            delay: 1200,
+                            presence: "composing",
+                            checkContact: false
+                        }
                     })
                 });
             } catch (fetchError) {

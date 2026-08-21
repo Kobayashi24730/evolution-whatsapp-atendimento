@@ -22,8 +22,18 @@ declare module "next-auth/jwt" {
     }
 }
 
+const getSecret = (): string => {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+        if (process.env.NODE_ENV === "production") {
+            throw new Error("FATAL: NEXTAUTH_SECRET não está definida em ambiente de produção.");
+        }
+        return "dev-fallback-secret-key-change-in-production";
+    }
+    return secret;
+};
 export const authOptions = {
-    secret: process.env.NEXTAUTH_SECRET || "defaultSecret",
+    secret: getSecret(),
     providers: [
         CredentialsProvider({
             name: "credentials",

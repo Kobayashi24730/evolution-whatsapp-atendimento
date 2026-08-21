@@ -26,7 +26,7 @@ services:
     networks:
       - nex_networks
     environment:
-      POSTGRES_USER: ${guilherme_client}
+      POSTGRES_USER: ${POSTGRES_USER_CLIENT}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_CLIENT}
       POSTGRES_DB: evolution_client
     healthcheck:
@@ -77,7 +77,7 @@ services:
       CACHE_REDIS_HOST: redis
       CACHE_REDIS_PORT: "6379"
       CACHE_REDIS_DB: "0"
-      CACHE_REDIS_URI: ${WEBHOOK_URL}
+      CACHE_REDIS_URI: redis://redis:6379/0
 
       AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
     depends_on:
