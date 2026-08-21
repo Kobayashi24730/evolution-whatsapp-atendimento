@@ -13,6 +13,24 @@ interface ChatWindowProps {
     onMudarStatus: (id: string | number, status: string) => void;
 }
 
+function dataUriToBlobUrl(dataUri: string): string | null {
+    try {
+        const [meta, base64] = dataUri.split(",");
+        const mimeMatch = meta.match(/data:(.*);base64/);
+        const mime = mimeMatch?.[1] || "application/octet-stream";
+        const byteString = atob(base64);
+        const bytes = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) {
+            bytes[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: mime });
+        return URL.createObjectURL(blob);
+    } catch (err) {
+        console.error("Falha ao converter mídia para Blob URL:", err);
+        return null;
+    }
+}
+
 export function ChatWindow({
                                atendimentoAtivo,
                                mensagens,
@@ -80,15 +98,13 @@ export function ChatWindow({
                                         {m.mediaUrl && m.tipo === "IMAGE" && (() => {
                                             const imageSrc = m.mediaUrl.startsWith("data:") || m.mediaUrl.startsWith("http") ? m.mediaUrl : `data:image/jpeg;base64,${m.mediaUrl}`;
                                             const handleOpenImage = () => {
-                                                if (m.mediaUrl.startsWith("http")) {
-                                                    window.open(m.mediaUrl, "_blank", "noopener,noreferrer");
-                                                } else {
-                                                    const imageWindow = window.open("");
-                                                    imageWindow?.document.write(
-                                                        `<body style="margin:0; background:#0e0e0e; display:flex; align-items:center; justify-center:center; height:100vh;">
-                                                          <img src="${imageSrc}" style="max-width:100%; max-height:100vh; object-fit:contain; margin:auto;" />
-                                                        </body>`
-                                                    );
+                                                if (imageSrc.startsWith("http")) {
+                                                    window.open(imageSrc, "_blank", "noopener,noreferrer");
+                                                    return;
+                                                }
+                                                const blobUrl = dataUriToBlobUrl(imageSrc);
+                                                if (blobUrl) {
+                                                    window.open(blobUrl, "_blank", "noopener,noreferrer");
                                                 }
                                             };
                                             return(
@@ -121,12 +137,15 @@ export function ChatWindow({
                                             <UseAudio m={m}/>
                                         )}
                                         {m.mediaUrl && m.tipo === "VIDEO" && (() => {
-                                            const videoSrc = m.mediaUrl.startsWith("data:") || m.mediaUrl.startsWith("http") ? m.mediaUrl : `data:video/mp4;base64,${m.mediaUrl}`;
+                                            const videoSrc = m.mediaUrl.startsWith("data:") || m.mediaUrl.startsWith("http")
+                                                ? m.mediaUrl
+                                                : `data:video/mp4;base64,${m.mediaUrl}`;
                                             return(
                                                 <div className="relative group max-w-xs sm:max-w-sm mt-1 overflow-hidden rounded-2xl border border-border/40 bg-black/10 dark:bg-black/40 shadow-sm transition-all duration-200 hover:shadow-md">
                                                     <div className="relative flex items-center justify-center bg-black/80 min-h-[180px]">
                                                         <video
-                                                            controls src={m.mediaUrl.startsWith("data:") ? m.mediaUrl : `data:video/mp4/base64,${m.mediaUrl}`}
+                                                            controls
+                                                            src={videoSrc}
                                                             className="rounded-lg max-w-full mt-1"
                                                         />
                                                     </div>

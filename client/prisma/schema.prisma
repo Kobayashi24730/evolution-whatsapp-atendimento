@@ -18,7 +18,7 @@ model Atendimento {
   contratoPlano   String?
   contratoStatus  String?
 
-  status          enum(StatusAtendimento)             @default("TRIAGEM")
+  status StatusAtendimento @default(TRIAGEM)
   aba             String             @default("GERAL")
   unreadCount     Int                @default(0)
   createdAt       DateTime           @default(now())
@@ -88,7 +88,7 @@ model Account {
 }
 
 model Session {
-  id           Int      @id @default(autoincrement())
+  id           String @id @default(uuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
