@@ -2,6 +2,7 @@ import Dropdown from "@/components/Dropdown";
 import { Images, Paperclip, Send, MessageSquareDashed } from 'lucide-react';
 import UseAudio from "@/components/atendimento/useAudio";
 import { DbNullClass } from "@prisma/client/runtime/client.mjs";
+import MediaAttachment from "@/components/common/MediaAttachment";
 
 interface ChatWindowProps {
     atendimentoAtivo: any;
@@ -70,12 +71,10 @@ export function ChatWindow({
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">
-                            <button className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Imagens">
-                                <Images size={18} />
-                            </button>
-                            <button className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Anexar">
-                                <Paperclip size={18} />
-                            </button>
+                            <MediaAttachment
+                                mode="list"
+                                files={atendimentoAtivo.arquivos}
+                            />
 
                             <div className="w-px h-5 bg-gray-200 mx-1" />
                             <Dropdown status={atendimentoAtivo.status} onSelect={(status) => onMudarStatus(atendimentoAtivo.id, status)}/>
@@ -224,16 +223,10 @@ export function ChatWindow({
                                 className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400"
                             />
                             <div className="flex items-center gap-2">
-                                <button 
-                                    onClick={() => null}
-                                    className="p-2 rounded-lg text-gray-600 hover:text-gray-600 hover:bg-gray-200 transition-colors" title="Imagens">   
-                                    <Images size={16} className="text-gray-600" />  
-                                </button>
-                                <button
-                                    onClick={() => null}
-                                    className="p-2 rounded-lg text-gray-600 hover:text-gray-600 hover:bg-gray-200 transition-colors" title="Imagens">
-                                    <Paperclip size={16} className="text-gray-600" />
-                                </button>
+                                <MediaAttachment
+                                    mode="upload-actions" 
+                                    onUpload={(files, type) => console.log(files, type)}
+                                />
                                 <button
                                     onClick={onSubmit}
                                     disabled={!msg.trim()}

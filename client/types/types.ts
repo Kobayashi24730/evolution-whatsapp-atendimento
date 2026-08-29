@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import React from "react";
+import MediaAttachment from '../components/common/MediaAttachment';
 
 
 export interface ChatWindowProps {
@@ -49,4 +50,20 @@ export interface WidgetProps {
     children: React.ReactNode;
     className?: string;
     onHeaderAction?: () => void;
+}
+
+export interface AttachmentItem {
+    id: string;
+    name: string;
+    url: string;
+    type: "image" | "video" | "docuement";
+    size: number;
+    createAt: string;
+}
+export interface MediaAttachmentProps {
+    files?: AttachmentItem[];
+    onUpload?: (files: FileList, type: "media" | "document") => void;
+    onSelectFile?: (file: AttachmentItem) => void;
+    mode?: "upload-actions" | "list" | "full";
+    className?: string;
 }
