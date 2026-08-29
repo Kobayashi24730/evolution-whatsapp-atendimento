@@ -1,0 +1,252 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-08-29T12:00:00.000Z",
+  "__export_source": "manual.evolution-whatsapp-atendimento",
+  "resources": [
+    {
+      "_id": "wrk_root",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "Evolution WhatsApp Atendimento",
+      "description": "Rotas de API do app Next.js (porta 3000). Rode `docker compose up -d` antes de testar."
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_root",
+      "name": "Base",
+      "data": {
+        "base_url": "http://localhost:3000",
+        "atendimento_id": "COLE_UM_ID_DE_ATENDIMENTO_AQUI"
+      }
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_root",
+      "name": "1. Autenticação (NextAuth)"
+    },
+    {
+      "_id": "req_auth_csrf",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "GET CSRF token",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/auth/csrf",
+      "description": "Necessário antes do login: o token CSRF retornado deve ser enviado no POST de callback."
+    },
+    {
+      "_id": "req_auth_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST Login (credentials callback)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/callback/credentials",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          { "name": "email", "value": "usuario@exemplo.com" },
+          { "name": "password", "value": "senha123" },
+          { "name": "csrfToken", "value": "COLE_O_TOKEN_DO_REQUEST_ANTERIOR" },
+          { "name": "json", "value": "true" }
+        ]
+      },
+      "description": "Autentica e seta o cookie de sessão. O cookie fica salvo automaticamente no cookie jar do Insomnia para as próximas requisições."
+    },
+    {
+      "_id": "req_auth_session",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "GET Sessão atual",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/auth/session"
+    },
+    {
+      "_id": "fld_user",
+      "_type": "request_group",
+      "parentId": "wrk_root",
+      "name": "2. Usuários"
+    },
+    {
+      "_id": "req_user_create",
+      "_type": "request",
+      "parentId": "fld_user",
+      "name": "POST Cadastrar usuário (público)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/user",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"novo@exemplo.com\",\n  \"password\": \"senha123\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "description": "Não exige sessão — endpoint de cadastro público."
+    },
+    {
+      "_id": "req_user_update",
+      "_type": "request",
+      "parentId": "fld_user",
+      "name": "PUT Atualizar usuário (requer login)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/user",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nome\": \"Novo Nome\",\n  \"email\": \"email_atual@exemplo.com\",\n  \"newEmail\": \"novo_email@exemplo.com\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "description": "newEmail é opcional. Requer cookie de sessão válido (rode o Login antes)."
+    },
+    {
+      "_id": "fld_atendimento",
+      "_type": "request_group",
+      "parentId": "wrk_root",
+      "name": "3. Atendimentos"
+    },
+    {
+      "_id": "req_atend_list",
+      "_type": "request",
+      "parentId": "fld_atendimento",
+      "name": "GET Listar atendimentos (status ativos)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/atendimento",
+      "parameters": [
+        { "name": "clienteNumero", "value": "", "disabled": true },
+        { "name": "clienteNome", "value": "", "disabled": true },
+        { "name": "userId", "value": "", "disabled": true },
+        { "name": "all", "value": "true", "disabled": true, "description": "Inclui status finalizados/resolvidos/cancelados" }
+      ],
+      "description": "Requer login. Por padrão só retorna status ativos (ABERTO, ESPERA, EM_ATENDIMENTO, TRIAGEM, AGUARDANDO_HUMANO, AGUARDANDO_CLIENTE)."
+    },
+    {
+      "_id": "req_atend_create",
+      "_type": "request",
+      "parentId": "fld_atendimento",
+      "name": "POST Criar atendimento manual",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/atendimento",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"clienteNumero\": \"5585999998888\",\n  \"clienteNome\": \"Cliente Teste\",\n  \"userId\": \"COLE_O_ID_DO_USUARIO_LOGADO\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "_id": "req_atend_send_message",
+      "_type": "request",
+      "parentId": "fld_atendimento",
+      "name": "PUT Enviar mensagem no painel",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/atendimento",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"mensagens\": \"Olá, tudo bem?\",\n  \"atendimentoId\": \"{{ _.atendimento_id }}\",\n  \"by\": true\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "description": "by: true dispara envio real via Evolution API (sendText) além de salvar a mensagem no banco."
+    },
+    {
+      "_id": "fld_mensagens",
+      "_type": "request_group",
+      "parentId": "wrk_root",
+      "name": "4. Mensagens"
+    },
+    {
+      "_id": "req_msg_list",
+      "_type": "request",
+      "parentId": "fld_mensagens",
+      "name": "GET Listar mensagens de um atendimento",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/mensagens",
+      "parameters": [
+        { "name": "atendimentoId", "value": "{{ _.atendimento_id }}" }
+      ]
+    },
+    {
+      "_id": "fld_status",
+      "_type": "request_group",
+      "parentId": "wrk_root",
+      "name": "5. Status"
+    },
+    {
+      "_id": "req_status_update",
+      "_type": "request",
+      "parentId": "fld_status",
+      "name": "PUT Alterar status do atendimento",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/status",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"EM_ATENDIMENTO\",\n  \"id\": \"{{ _.atendimento_id }}\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "description": "Valores válidos do enum StatusAtendimento: ABERTO, ESPERA, TRIAGEM, EM_ATENDIMENTO, AGUARDANDO_HUMANO, AGUARDANDO_CLIENTE, RESOLVIDO, FINALIZADO, CANCELADO."
+    },
+    {
+      "_id": "fld_finalizar",
+      "_type": "request_group",
+      "parentId": "wrk_root",
+      "name": "6. Finalizar atendimento"
+    },
+    {
+      "_id": "req_finalizar",
+      "_type": "request",
+      "parentId": "fld_finalizar",
+      "name": "POST Finalizar atendimento",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/finalizar",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"atendimentoId\": \"{{ _.atendimento_id }}\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "description": "Marca como FINALIZADO e envia mensagem automática de encerramento via WhatsApp."
+    },
+    {
+      "_id": "fld_dashboard",
+      "_type": "request_group",
+      "parentId": "wrk_root",
+      "name": "7. Dashboard"
+    },
+    {
+      "_id": "req_dashboard_stats",
+      "_type": "request",
+      "parentId": "fld_dashboard",
+      "name": "GET Estatísticas (KPIs + fila crítica)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/dashboard/stats"
+    },
+    {
+      "_id": "fld_webhook",
+      "_type": "request_group",
+      "parentId": "wrk_root",
+      "name": "8. Webhook (Evolution API → App)"
+    },
+    {
+      "_id": "req_webhook_message",
+      "_type": "request",
+      "parentId": "fld_webhook",
+      "name": "POST Simular mensagem recebida",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/webhook",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"event\": \"MESSAGES_UPSERT\",\n  \"instance\": \"gui\",\n  \"data\": {\n    \"key\": {\n      \"remoteJid\": \"5585999998888@s.whatsapp.net\",\n      \"fromMe\": false,\n      \"id\": \"TESTE123\"\n    },\n    \"pushName\": \"Cliente Teste\",\n    \"message\": {\n      \"conversation\": \"Olá, preciso de ajuda\"\n    }\n  }\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "description": "Não exige autenticação (chamado pela Evolution API, não pelo usuário). Use para testar o fluxo de criação de atendimento sem depender do WhatsApp real."
+    },
+    {
+      "_id": "req_webhook_contacts",
+      "_type": "request",
+      "parentId": "fld_webhook",
+      "name": "POST Simular atualização de contato",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/webhook",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"event\": \"CONTACTS.UPDATE\",\n  \"instance\": \"gui\",\n  \"data\": {\n    \"remoteJid\": \"5585999998888@s.whatsapp.net\",\n    \"pushName\": \"Novo Nome do Cliente\",\n    \"profilePictureUrl\": \"https://exemplo.com/foto.jpg\"\n  }\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }]
+    }
+  ]
+}
