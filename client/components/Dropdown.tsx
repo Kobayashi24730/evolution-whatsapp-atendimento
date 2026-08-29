@@ -12,14 +12,18 @@ const statusStyles: Record<string, string> = {
     EM_ATENDIMENTO: "bg-blue-50   text-blue-700   border-blue-200 hover:bg-blue-100",
     TRIAGEM:        "bg-amber-50  text-amber-700  border-amber-200 hover:bg-amber-100",
     FECHADO:        "bg-gray-100  text-gray-500   border-gray-200 hover:bg-gray-200",
-    AGUARDANDO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+    AGUARDANDO_HUMANO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+    AGUARDANDO_CLIENTE:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+    RESOLVIDO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+    FINALIZADO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+    CANCELADO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
 };
 
 const stylesDefault = "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200";
 
 export default function StatusDropdown({ status, onSelect }: DropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const opcoes = ["ABERTO", "EM_ATENDIMENTO", "TRIAGEM", "AGUARDANDO", "FECHADO"];
+    const opcoes = ["ABERTO", "ESPERA", "TRIAGEM", "EM_ATENDIMENTO", "AGUARDANDO_HUMANO", "AGUARDANDO_CLIENTE", "RESOLVIDO", "FINALIZADO", "CANCELADO"];
 
     return (
         <div className="relative inline-block text-left">

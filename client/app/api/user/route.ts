@@ -4,10 +4,6 @@ import { prisma } from "@/libs/prisma";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
-    const session = await validateSession(); //? verifica se o usuario esta autenticado
-    if (!session) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
     try {
         const { email, password } = await request.json(); //? coreleta os dados do usuario
         if (!email || !password) {

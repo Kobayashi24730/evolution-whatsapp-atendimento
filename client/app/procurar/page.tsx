@@ -29,10 +29,16 @@ export default function Procurar() {
     const [chatId, setChatId] = useState<string | null>(null);
 
     useEffect(() => {
-        async function getValues() {
+        const getValues = async () => {
             try {
-                const response = await fetch("/api/atendimento");
-                if (!response.ok) throw new Error("Erro na requisição");
+                const response = await fetch("/api/atendimento", {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                });
+                if (!response.ok) {
+                    const error = await response.json().catch(() => null);
+                    throw new Error(error?.message || `Erro na requisição: ${response.status}`);
+                }
                 const json = await response.json();
                 setData(Array.isArray(json.data) ? json.data : []);
             } catch (err) {

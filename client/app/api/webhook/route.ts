@@ -4,6 +4,20 @@ import { Prisma } from "@prisma/client";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function normalizarNumeroBrasileiro(numero: string): string {
+    if (!numero.startsWith("55")) return numero;
+ 
+    const resto = numero.slice(2); // remove "55"
+    if (resto.length === 10) {
+        const ddd = resto.slice(0, 2);
+        const numeroSemDDD = resto.slice(2);
+        if (!numeroSemDDD.startsWith("9")) {
+            return `55${ddd}9${numeroSemDDD}`;
+        }
+    }
+    return numero;
+}
+
 export async function POST(request: Request) {
     try {
         const body: any = await request.json();
@@ -28,7 +42,8 @@ export async function POST(request: Request) {
         if (remoteJid.includes("@lid")) return NextResponse.json({ status: "ignorado", motivo: "identificador_interno_lid_ignorado" });
         if (remoteJid.includes("@g.us")) return NextResponse.json({ status: "ignorado", motivo: "evento_de_grupo_ignorado" });
         if (remoteJid.includes("@status")) return NextResponse.json({ status: "ignorado", motivo: "evento_de_status_ignorado" });
-        const numeroCliente = remoteJid.includes("@") ? remoteJid.split("@")[0] : remoteJid;
+        const numeroClienteBruto = remoteJid.includes("@") ? remoteJid.split("@")[0] : remoteJid;
+        const numeroCliente = normalizarNumeroBrasileiro(numeroClienteBruto);
         const profilePic = primeiroDado.profilePictureUrl || primeiroDado.picture || primeiroDado.avatar ||null;
         if (!numeroCliente || numeroCliente.trim() === "" || numeroCliente.length < 8) {
             return NextResponse.json({ status: "ignorado", motivo: "numero_cliente_invalido_ou_curto" });

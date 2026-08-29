@@ -1,6 +1,7 @@
 import Dropdown from "@/components/Dropdown";
 import { Images, Paperclip, Send, MessageSquareDashed } from 'lucide-react';
 import UseAudio from "@/components/atendimento/useAudio";
+import { DbNullClass } from "@prisma/client/runtime/client.mjs";
 
 interface ChatWindowProps {
     atendimentoAtivo: any;
@@ -222,14 +223,26 @@ export function ChatWindow({
                                 onKeyDown={(e) => e.key === "Enter" && onSubmit()}
                                 className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400"
                             />
-                            <button
-                                onClick={onSubmit}
-                                disabled={!msg.trim()}
-                                className="shrink-0 flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold px-3.5 py-2 rounded-lg active:scale-95 transition-all"
-                            >
-                                <Send size={13} />
-                                Enviar
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => null}
+                                    className="p-2 rounded-lg text-gray-600 hover:text-gray-600 hover:bg-gray-200 transition-colors" title="Imagens">   
+                                    <Images size={16} className="text-gray-600" />  
+                                </button>
+                                <button
+                                    onClick={() => null}
+                                    className="p-2 rounded-lg text-gray-600 hover:text-gray-600 hover:bg-gray-200 transition-colors" title="Imagens">
+                                    <Paperclip size={16} className="text-gray-600" />
+                                </button>
+                                <button
+                                    onClick={onSubmit}
+                                    disabled={!msg.trim()}
+                                    className="shrink-0 flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold px-3.5 py-2 rounded-lg active:scale-95 transition-all"
+                                >
+                                    <Send size={13} />
+                                    Enviar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </>

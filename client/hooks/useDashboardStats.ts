@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from "react";
-import { DashboardStatsData, ChamadoCritico, DashboardKPIs } from "@/types/types";
+import { DashboardStatsData } from "@/types/types";
 
 const defaultStats: DashboardStatsData = {
     kpis: {
@@ -23,18 +23,18 @@ export function useDashboardStats() {
 
     const fetchStats = useCallback(async () => {
         try {
-            const response = await fetch("/api/dashboard/stats", {
+            const response = await fetch("/api/dashboard/status", {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
 
+            const data = await response.json().catch(() => null);
+
             if (!response.ok) {
-                throw new Error(`Erro na API: ${response.status}`);
+                const serverError = data?.error || data?.message || `Erro HTTP ${response.status}`;
+                throw new Error(serverError);
             }
 
-            const data = await response.json();
-
-            // Garante que o retorno tem a estrutura mínima esperada antes de atualizar o estado
             if (data && data.kpis) {
                 setStats({
                     kpis: {

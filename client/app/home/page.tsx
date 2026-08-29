@@ -209,7 +209,7 @@ export default function HomePage() {
                     <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm space-y-4">
 
                         <Link
-                            href="/chat"
+                            href="/atendimento"
                             className="flex items-center justify-between p-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
                         >
                             <div className="flex items-center gap-2.5">

@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
@@ -19,7 +18,7 @@ import {
 const formSchema = z.object({
     name: z.string().optional(),
     email: z.string().email("E-mail inválido"),
-    password: z.string().min(6, "Senha deve ter no minimo 6 caracteres"),
+    password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -29,25 +28,27 @@ export default function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [typeForm, setTypeForm] = useState<"login" | "register">("login");
+
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            name: "", // <-- Adicionado string vazia para evitar undefined
             email: "",
             password: "",
         },
     });
 
-    async function onSubmit (values: FormValues) {
-        if (typeForm === "login"){
+    async function onSubmit(values: FormValues) {
+        if (typeForm === "login") {
             try {
                 setLoading(true);
+                setError(null);
                 const res = await signIn("credentials", {
                     redirect: false,
                     email: values.email,
                     password: values.password,
                 });
                 if (res?.error) {
-                    console.log("Erro ", res);
                     setError("E-mail ou senha inválidos.");
                 } else {
                     router.refresh();
@@ -65,26 +66,30 @@ export default function LoginForm() {
                 const res = await fetch("/api/user", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({email: values.email, password: values.password})
+                    body: JSON.stringify({ 
+                        name: values.name, 
+                        email: values.email, 
+                        password: values.password 
+                    })
                 });
                 const data = await res.json();
                 if (!res.ok) {
                     setError(data?.message || "Falha ao registrar usuário.");
                     return;
                 }
-                const singInResult = await signIn("credentials", {
+                const signInResult = await signIn("credentials", {
                     redirect: false,
                     email: values.email,
                     password: values.password,
                 });
-                if (singInResult?.error) {
+                if (signInResult?.error) {
                     setError("Conta criada, mas ocorreu um erro ao fazer login automático.");
                     return;
                 }
                 router.refresh();
                 router.push("/atendimento");
             } catch (error) {
-                setError("Failed to Register user");
+                setError("Falha ao registrar usuário");
             } finally {
                 setLoading(false);
             }
@@ -93,11 +98,15 @@ export default function LoginForm() {
 
     return (
         <section className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-            <Form {...form} >
+            <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4">
                     <div className="flex justify-end mb-6">
                         <button
-                            onClick={() => setTypeForm(typeForm === "login" ? "register" : "login")}
+                            type="button"
+                            onClick={() => {
+                                setError(null);
+                                setTypeForm(typeForm === "login" ? "register" : "login");
+                            }}
                             className="text-sm text-blue-600 hover:text-blue-800 transition"
                         >
                             {typeForm === "login"
@@ -116,50 +125,54 @@ export default function LoginForm() {
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel htmlFor="name">Name</FormLabel>
+                                    <FormLabel htmlFor="name">Nome</FormLabel>
                                     <FormControl>
-                                        <Input id="nome" {...field} />
+                                        <Input id="name" placeholder="Seu nome completo" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
-                                )}
+                            )}
                         />
                     )}
+
                     <FormField
                         control={form.control}
                         name="email"
-                        render={({field}) => (
+                        render={({ field }) => (
                             <FormItem>
-                                <FormLabel htmlFor="E-mail">E-mail</FormLabel>
+                                <FormLabel htmlFor="email">E-mail</FormLabel>
                                 <FormControl>
-                                    <Input id="email" {...field}/>
+                                    <Input id="email" type="email" placeholder="seu@email.com" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
+
                     <FormField
                         control={form.control}
                         name="password"
-                        render={({field}) => (
+                        render={({ field }) => (
                             <FormItem>
-                                <FormLabel htmlFor="password">Password</FormLabel>
+                                <FormLabel htmlFor="password">Senha</FormLabel>
                                 <FormControl>
-                                    <Input id="password" {...field} />
+                                    <Input id="password" type="password" placeholder="******" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    {error && <p className="text-red-500">{error}</p>}
+
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
+
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+                        disabled={loading}
+                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                     >
-                        {loading ? "Carregando..." : ""}
-                        {!loading && typeForm === "login"
-                            ? "Entrar"
-                            : "Cadastrar"}
+                        {loading 
+                            ? "Carregando..." 
+                            : typeForm === "login" ? "Entrar" : "Cadastrar"}
                     </button>
 
                     {typeForm === "login" && (
