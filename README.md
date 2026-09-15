@@ -109,3 +109,9 @@ client/
 ## Documentação de endpoints
 
 Ver `insomnia-collection.json` — coleção exportável direto para o Insomnia (**Application → Import/Export → Import Data → From File**).
+
+---
+
+## Licença
+
+**Distribuído sob a licença MIT. Veja o arquivo LICENSE para o texto completo.**
