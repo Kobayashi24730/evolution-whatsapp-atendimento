@@ -196,7 +196,7 @@ export async function POST(request: Request) {
             const instance_name = process.env.EVOLUTION_INSTANCE_NAME || "anonimo";
             const API_KEY_SECERT = process.env.EVOLUTION_API_KEY || "";
             const protocolo = atendimentoActive.id.slice(-5).toUpperCase();
-            const textoResposta = `Olá, ${nomeCliente}! Seu atendimento foi iniciado sob o protocolo nº #${protocolo}. Um atendente humano falará com você em breve.`;
+            const textoResposta = "" ///`Olá, ${nomeCliente}! Seu atendimento foi iniciado sob o protocolo nº #${protocolo}. Um atendente humano falará com você em breve.`;
 
             try {
                 const destinoJid = remoteJid.includes("@") ? remoteJid : `${remoteJid}@s.whatsapp.net`;

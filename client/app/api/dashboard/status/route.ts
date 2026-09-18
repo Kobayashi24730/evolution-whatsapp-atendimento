@@ -1,4 +1,3 @@
-// app/api/dashboard/stats/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
 import { validateSession } from "@/libs/auth";

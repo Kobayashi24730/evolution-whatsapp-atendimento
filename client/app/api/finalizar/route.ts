@@ -29,7 +29,7 @@ export async function POST(request: Request) {
             headers: { 'Content-Type': 'application/json', apikey: API_KEY_SECERT },
             body: JSON.stringify({
                 number: response.clienteNumero.split('@')[0],
-                text: "Este atendimento foi encerrado. Obrigado pelo contato! Se precisar de algo mais, basta enviar uma nova mensagem.",
+                text: "", // "Este atendimento foi encerrado. Obrigado pelo contato! Se precisar de algo mais, basta enviar uma nova mensagem.",
                 options: { delay: 1200, presence: "composing", checkContact: false }
             })
         });

@@ -19,6 +19,7 @@ model Atendimento {
   contratoStatus  String?
 
   status StatusAtendimento @default(TRIAGEM)
+  dataEncerramento  DateTime?
   aba             String             @default("GERAL")
   unreadCount     Int                @default(0)
   createdAt       DateTime           @default(now())

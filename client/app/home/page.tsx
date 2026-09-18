@@ -12,11 +12,7 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
-    // Dados simulados (no seu app, você pode buscar do backend ou sessão)
-    const usuario = {
-        nome: "Raimunda",
-        role: "Atendente"
-    };
+    
 
     // Frase motivacional baseada na hora atual
     const getSaudacaoEMotivacao = () => {
@@ -103,7 +99,7 @@ export default function HomePage() {
                         </div>
                     </div>
                     <div className="text-2xl font-bold">12</div>
-                    <p className="text-[11px] text-muted-foreground">Aguardando sua resposta</p>
+                    <p className="text-[11px] text-muted-foreground">Atendimentos efetuados hoje</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm hover:border-border transition-colors space-y-2">
