@@ -115,3 +115,4 @@ Ver `insomnia-collection.json` — coleção exportável direto para o Insomnia 
 ## Licença
 
 **Distribuído sob a licença MIT. Veja o arquivo LICENSE para o texto completo.**
+
