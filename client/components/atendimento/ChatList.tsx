@@ -2,28 +2,74 @@
 import { AtendimentoComTipo } from "@/types/types";
 import { User, MessageCircle } from "lucide-react";
 import { formatarTempoCorrido } from "../../libs/utils";
+import { StatusConfig, ChatListProps } from "@/types/types";
 
-interface ChatListProps {
-    atendimentos?: AtendimentoComTipo[];
-    atendimentoAtivoId?: string;
-    onSelectChat: (id: string) => void;
-}
+export const statusStyles: Record<string, StatusConfig> = {
+    // Status Ativos e Inicial
+    TRIAGEM: {
+        badge: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+        dot: "bg-amber-500",
+    },
+    ABERTO: {
+        badge: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+        dot: "bg-emerald-500",
+    },
+    EM_ATENDIMENTO: {
+        badge: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800",
+        dot: "bg-blue-500",
+    },
 
-const statusStyles: Record<string, { badge: string; dot: string }> = {
-    ABERTO:         { badge: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-400" },
-    EM_ATENDIMENTO: { badge: "bg-blue-50   text-blue-700   border-blue-200",     dot: "bg-blue-400"    },
-    TRIAGEM:        { badge: "bg-amber-50  text-amber-700  border-amber-200",    dot: "bg-amber-400"   },
-    FECHADO:        { badge: "bg-gray-100  text-gray-500   border-gray-200",     dot: "bg-gray-300"    },
-    AGUARDANDO:     { badge: "bg-purple-50 text-purple-700 border-purple-200",   dot: "bg-purple-400"  },
+    //? Status de Espera / Pendência
+    AGUARDANDO: {
+        badge: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800",
+        dot: "bg-purple-500",
+    },
+    AGUARDANDO_HUMANO: {
+        badge: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800",
+        dot: "bg-purple-500",
+    },
+    AGUARDANDO_CLIENTE: {
+        badge: "bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-800",
+        dot: "bg-cyan-500",
+    },
+
+    //? Status de Conclusão e Cancelamento
+    RESOLVIDO: {
+        badge: "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-800",
+        dot: "bg-teal-500",
+    },
+    FINALIZADO: {
+        badge: "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+        dot: "bg-slate-400",
+    },
+    FECHADO: {
+        badge: "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
+        dot: "bg-gray-400",
+    },
+    CANCELADO: {
+        badge: "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+        dot: "bg-rose-500",
+    },
 };
-const statusDefault = { badge: "bg-gray-100 text-gray-600 border-gray-200", dot: "bg-gray-300" };
-const statusLabel: Record<string, string> = {
-    ABERTO:         "Aberto",
+
+export const statusDefault: StatusConfig = {
+    badge: "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
+    dot: "bg-gray-400",
+};
+
+export const statusLabel: Record<string, string> = {
+    TRIAGEM: "Triagem",
+    ABERTO: "Aberto",
     EM_ATENDIMENTO: "Em atendimento",
-    TRIAGEM:        "Triagem",
-    FECHADO:        "Fechado",
-    AGUARDANDO:     "Aguardando",
+    AGUARDANDO: "Aguardando",
+    AGUARDANDO_HUMANO: "Aguardando humano",
+    AGUARDANDO_CLIENTE: "Aguardando cliente",
+    RESOLVIDO: "Resolvido",
+    FINALIZADO: "Finalizado",
+    FECHADO: "Fechado",
+    CANCELADO: "Cancelado",
 };
+
 
 export function ChatList({ atendimentos = [], atendimentoAtivoId, onSelectChat }: ChatListProps) {
     return (

@@ -16,7 +16,8 @@ export async function POST(request: Request) {
         const response = await prisma.atendimento.update({
             where: { id: atendimentoID },
             data: {
-                status: "FINALIZADO"
+                status: "FINALIZADO",
+                dataEncerramento: new Date()
             }
         });
 

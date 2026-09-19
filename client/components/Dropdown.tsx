@@ -8,15 +8,20 @@ interface DropdownProps {
 }
 
 const statusStyles: Record<string, string> = {
-    ABERTO:         "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
-    EM_ATENDIMENTO: "bg-blue-50   text-blue-700   border-blue-200 hover:bg-blue-100",
-    TRIAGEM:        "bg-amber-50  text-amber-700  border-amber-200 hover:bg-amber-100",
-    FECHADO:        "bg-gray-100  text-gray-500   border-gray-200 hover:bg-gray-200",
-    AGUARDANDO_HUMANO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
-    AGUARDANDO_CLIENTE:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
-    RESOLVIDO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
-    FINALIZADO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
-    CANCELADO:     "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+    //? Status Ativos e Inicial
+    TRIAGEM:            "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+    ABERTO:             "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+    EM_ATENDIMENTO:     "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800",
+
+    //? Status de Espera / Pendência
+    AGUARDANDO_HUMANO:  "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800",
+    AGUARDANDO_CLIENTE: "bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-800",
+
+    //? Status de Conclusão e Cancelamento
+    RESOLVIDO:          "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-800",
+    FINALIZADO:         "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+    FECHADO:            "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
+    CANCELADO:          "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
 };
 
 const stylesDefault = "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200";

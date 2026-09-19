@@ -33,7 +33,6 @@ export default function DashboardChamados() {
         { data: "24/08", hora: "14:50", titulo: "Prodafis Grupos de Acesso",    descricao: "Atualização de permissões para usuários." },
         { data: "24/08", hora: "14:51", titulo: "Treinamento em SIAGRO",        descricao: "Nova sessão marcada para a próxima semana." },
     ];
-
     const kpis: KpiProps[] = [
         { label: "Chamados abertos",                          value: stats?.kpis?.totalAbertos ?? 0,          icon: Headphones,   bg: "bg-blue-600",   iconBg: "bg-blue-500"   },
         { label: "Aguardando aprovação",                      value: stats?.kpis?.aguardandoAprovacao ?? 0,  icon: Clock,        bg: "bg-slate-700",  iconBg: "bg-slate-600"  },

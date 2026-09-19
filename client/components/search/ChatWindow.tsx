@@ -4,6 +4,7 @@ import {useEffect, useState} from "react";
 import {Images, MessageSquareDashed, Paperclip, Send} from "lucide-react";
 import UseAudio from "@/components/atendimento/useAudio";
 import {ChatWindowProps} from "@/types/types";
+import { useRouter } from "next/navigation";
 
 
 const statusStyles: Record<string, { badge: string; dot: string }> = {
@@ -41,6 +42,7 @@ function dataUriToBlobUrl(dataUri: string): string | null {
 }
 
 export default function ChatWindow({id}: ChatWindowProps) {
+    const router = useRouter();
     const [data, setData] = useState<any>(null);
     const [mensagens, setMensagem] = useState<any>([]);
 
@@ -64,7 +66,6 @@ export default function ChatWindow({id}: ChatWindowProps) {
             console.log(error);
         }
     }
-
     const getMensagems = async (id: any) => {
         try {
             const response = await fetch(`/api/mensagens?atendimentoId=${id}`, {
@@ -80,6 +81,10 @@ export default function ChatWindow({id}: ChatWindowProps) {
             console.error("Erro ao buscar mensagens:", error);
             setMensagem([]);
         }
+    }
+    const handleGoToChat = () => {
+        //? Redireciona para o chat com o ID do atendimento.
+        router.push(`/atendimento?id=${data.id}`);
     }
 
     const style = data?.status ? (statusStyles[data.status]) : statusDefault;
@@ -250,7 +255,7 @@ export default function ChatWindow({id}: ChatWindowProps) {
                     <div className="flex items-center justify-center text-xs sm:text-sm text-gray-500 border-t border-gray-100 pt-4 mt-2 text-center">
                         <p className="flex items-center gap-1.5 flex-wrap justify-center">
                             <span>Para enviar uma mensagem, clique no botão</span>
-                            <button className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 hover:text-blue-700 active:scale-95 transition-all cursor-pointer">
+                            <button onClick={handleGoToChat} className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 hover:text-blue-700 active:scale-95 transition-all cursor-pointer">
                                 Ir para chat →
                             </button>
                         </p>

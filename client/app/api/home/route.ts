@@ -3,56 +3,60 @@ import { prisma } from "@/libs/prisma";
 import { validateSession } from "@/libs/auth";
 
 export async function GET() {
-  const session = await validateSession();
-  if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
   try {
-    const userLogado = session.user.name;
-    const inicioDoDia = new Date();
-    inicioDoDia.setHours(0, 0, 0, 0);
+    const session = await validateSession();
 
-    const fimDoDia = new Date();
-    fimDoDia.setHours(23, 59, 59, 999);
+    if (!session) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
-    // Contagem de atendimentos criados hoje
-    const totalCriadosHoje = await prisma.atendimento.count({
-      where: {
-        createdAt: {
-          gte: inicioDoDia,
-          lte: fimDoDia,
+    const userLogado = (session as any)?.user?.name ?? "Atendente";
+
+    // Cria as datas de início e fim do dia atual em UTC para evitar falhas no Postgres
+    const agora = new Date();
+    const inicioDoDia = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), agora.getUTCDate(), 0, 0, 0, 0));
+    const fimDoDia = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), agora.getUTCDate(), 23, 59, 59, 999));
+
+    const [totalCriadosHoje, totalFinalizadosHoje, totalAbertosAtualmente] = await Promise.all([
+      prisma.atendimento.count({
+        where: {
+          createdAt: {
+            gte: inicioDoDia,
+            lte: fimDoDia,
+          },
         },
-      },
-    });
-
-    // Contagem de atendimentos finalizados hoje
-    const totalFinalizadosHoje = await prisma.atendimento.count({
-      where: {
-        dataEncerramento: {
-          gte: inicioDoDia,
-          lte: fimDoDia,
+      }),
+      prisma.atendimento.count({
+        where: {
+          dataEncerramento: {
+            gte: inicioDoDia,
+            lte: fimDoDia,
+          },
         },
-      },
-    });
-
-    // Contagem de atendimentos que continuam ABERTOS atualmente 
-    const totalAbertosAtualmente = await prisma.atendimento.count({
-      where: {
-        dataEncerramento: null,
-      },
-    });
+      }),
+      prisma.atendimento.count({
+        where: {
+          dataEncerramento: null,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       totalCriadosHoje,
       totalAbertos: totalAbertosAtualmente,
       totalFinalizados: totalFinalizadosHoje,
-      atendenteName: userLogado
+      atendenteName: userLogado,
     });
-  } catch (err) {
-    console.error("Falha ao buscar estatísticas de atendimentos: ", err);
+  } catch (err: any) {
+    console.error("====== ERRO DOCKER PRISMA ======");
+    console.error(err);
+
+    // Retorna a mensagem de erro exata no JSON para podermos ler no navegador
     return NextResponse.json(
-      { message: "Failed to fetch stats" },
+      { 
+        message: "Failed to fetch stats", 
+        errorDetails: err?.message || String(err)
+      },
       { status: 500 }
     );
   }

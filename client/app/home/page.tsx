@@ -16,6 +16,7 @@ import {
 
 export default function HomePage() {
     const { error, status, loading } = useHome();
+    console.log("status: ", status);
 
     // Frase motivacional baseada na hora atual
     const getSaudacaoEMotivacao = () => {
@@ -96,12 +97,12 @@ export default function HomePage() {
 
                 <div className="p-5 rounded-2xl bg-card border border-border/60 shadow-sm hover:border-border transition-colors space-y-2">
                     <div className="flex items-center justify-between text-muted-foreground">
-                        <span className="text-xs font-medium">Atendimentos Abertos</span>
+                        <span className="text-xs font-medium">Atendimentos totais hoje</span>
                         <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
                             <MessageSquare className="w-4 h-4" />
                         </div>
                     </div>
-                    <div className="text-2xl font-bold">12</div>
+                    <div className="text-2xl font-bold">{status?.totalAbertos}</div>
                     <p className="text-[11px] text-muted-foreground">Atendimentos efetuados hoje</p>
                 </div>
 
@@ -123,7 +124,7 @@ export default function HomePage() {
                             <CheckCircle2 className="w-4 h-4" />
                         </div>
                     </div>
-                    <div className="text-2xl font-bold">28</div>
+                    <div className="text-2xl font-bold">{status?.totalFinalizados}</div>
                     <p className="text-[11px] text-muted-foreground">Meta diária: 30</p>
                 </div>
 

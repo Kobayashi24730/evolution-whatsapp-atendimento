@@ -6,16 +6,12 @@ import { HomeStats } from "@/types/types";
 export function useHome() {
     const [error, setError] = useState<string | null>(null);
     const [status, setStatus] = useState<HomeStats | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
     
     const fetchHome = useCallback(async () => {
         try {
             setError(null);
-            const res = await fetch("/api/home", {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-                cache: "no-store"
-            });
+            const res = await fetch("/api/home");
             if (!res.ok) {
                 throw new Error(`Error ao buscar home`);
             }
@@ -27,11 +23,11 @@ export function useHome() {
         } finally {
             setLoading(false);
         }
-    });
+    }, []);
 
     useEffect(() => {
         fetchHome();
-        const interval = setInterval(() => {fetchHome(), 10000});
+        const interval = setInterval(() => {fetchHome();}, 10000);
         return () => clearInterval(interval);
     }, [fetchHome]);
 

@@ -8,14 +8,14 @@ export async function GET() {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
     try {
-        // Executa todas as consultas de agregados em paralelo usando o schema exato
+        //? Executa todas as consultas de agregados em paralelo usando o schema exato
         const [
             totalAbertos,
             finalizados,
             aguardando,
             chamadosFila
         ] = await Promise.all([
-            // Status padrões conforme seu modelo ("ABERTO", "FINALIZADO", "EM_ATENDIMENTO")
+            //? Status padrões conforme seu modelo ("ABERTO", "FINALIZADO", "EM_ATENDIMENTO")
             prisma.atendimento.count({
                 where: { status: { in: ["ABERTO", "EM_ATENDIMENTO", "TRIAGEM"] } }
             }),
@@ -43,7 +43,7 @@ export async function GET() {
 
         const agora = new Date().getTime();
 
-        // Mapeamento seguro da fila crítica sem risco de quebrar no tempo/data
+        //? Mapeamento seguro da fila crítica sem risco de quebrar no tempo/data
         const filaCritica = chamadosFila.map((item) => {
             const dataCriacao = item.createdAt ? new Date(item.createdAt).getTime() : agora;
             const minutosEspera = Math.max(0, Math.floor((agora - dataCriacao) / (1000 * 60)));
@@ -55,11 +55,11 @@ export async function GET() {
                 tempoEsperaFormatado = `${horas}h ${mins}m`;
             }
 
-            // Prioriza o nome, se não tiver usa o número do WhatsApp/Cliente
-            const clienteIdentificador = item.clienteNome || item.clienteNumero || `Chamado #${item.id.slice(0, 5)}`;
+            //? Prioriza o nome, se não tiver usa o número do WhatsApp/Cliente
+            const clienteIdentificador = item.clienteNome || item.clienteNumero || `Chamado ${item.id}`;
 
             return {
-                id: `#${item.id.slice(0, 5)}`,
+                id: `${item.id}`,
                 cliente: clienteIdentificador,
                 tempoEspera: tempoEsperaFormatado,
                 prioridade: minutosEspera > 30 ? "URGENTE" : "ALTA",

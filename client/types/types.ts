@@ -83,3 +83,14 @@ export interface fututosKPIs {
     aVencerHoje: number;
     meusVencidos: number;
 }
+
+export interface ChatListProps {
+    atendimentos?: AtendimentoComTipo[];
+    atendimentoAtivoId?: string;
+    onSelectChat: (id: string) => void;
+}
+
+export type StatusConfig = {
+    badge: string;
+    dot: string;
+};

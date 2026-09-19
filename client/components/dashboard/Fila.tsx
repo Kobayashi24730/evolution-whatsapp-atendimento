@@ -3,9 +3,15 @@
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Widget } from "@/components/common/widget";
 import { AlertCircle, Loader2, ArrowUpRight, Newspaper } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function FilaUrgestes() {
     const { stats, loading } = useDashboardStats();
+    const route = useRouter();
+
+    const handleGoToChat = (id: string) => {
+        route.push(`/atendimento?id=${id}`);
+    };
     return (
         <div className="space-y-6">
             <Widget title="Prioridade / Fila de Espera" icon={AlertCircle}>
@@ -16,10 +22,10 @@ export default function FilaUrgestes() {
                 ) : stats?.filaCritica && stats.filaCritica.length > 0 ? (
                     <ul className="divide-y divide-gray-100">
                         {stats.filaCritica.map((item) => (
-                            <li key={item.id} className="p-3.5 hover:bg-gray-50/80 transition-colors cursor-pointer group flex items-center justify-between">
+                            <li key={item.id} onClick={() => handleGoToChat(item.id)} className="p-3.5 hover:bg-gray-50/80 transition-colors cursor-pointer group flex items-center justify-between">
                                 <div className="min-w-0 pr-2">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-gray-900">{item.id}</span>
+                                        <span className="text-xs font-bold text-gray-900">{item.id.slice(0, 5)}</span>
                                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                                             item.prioridade === "URGENTE" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700"
                                         }`}>

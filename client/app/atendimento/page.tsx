@@ -5,8 +5,11 @@ import "next-auth/jwt";
 import {ChatWindow} from "@/components/atendimento/ChatWindow";
 import {useAtendimentos} from "@/hooks/useAtendimentos";
 import {ChatList} from "@/components/atendimento/ChatList";
+import {useEffect} from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function Atendimentos() {
+    const searchParams = useSearchParams();
     const { data,
         mensagem,
         msg,
@@ -19,6 +22,14 @@ export default function Atendimentos() {
         mudarStatus,
         setIsOpen,
         isOpen } = useAtendimentos();
+
+    //? Sincroniza o id do atendimento ativo com o id da url vindo do botão "ir para o chat" 
+    useEffect(() => {
+        const idFromUrl = searchParams.get("id");
+        if (idFromUrl && idFromUrl !== atendimentoAtivo?.id) {
+            setIdAtendimentoAtivo(idFromUrl);
+        }
+    }, [searchParams]);
 
     return (
         <main className="container mx-auto p-4 h-[calc(100vh-2rem)] flex flex-col gap-6">
