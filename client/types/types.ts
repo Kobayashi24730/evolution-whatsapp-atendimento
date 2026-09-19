@@ -67,3 +67,19 @@ export interface MediaAttachmentProps {
     mode?: "upload-actions" | "list" | "full";
     className?: string;
 }
+
+export interface HomeStats {
+    totalCriadosHoje: number;
+    totalAbertos: number;
+    totalFinalizados: number;
+    atendenteName: string;
+}
+export interface fututosKPIs {
+    totalAbertos: number;
+    aguardandoAprovacao: number;
+    concluidos: number;
+    vencidos: number;
+    respostaVencida: number;
+    aVencerHoje: number;
+    meusVencidos: number;
+}

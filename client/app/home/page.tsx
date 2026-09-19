@@ -1,4 +1,7 @@
+'use client';
+
 import Link from "next/link";
+import { useHome } from "@/hooks/useHome";
 import {
     Sparkles,
     Bell,
@@ -12,7 +15,7 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
-    
+    const { error, status, loading } = useHome();
 
     // Frase motivacional baseada na hora atual
     const getSaudacaoEMotivacao = () => {
@@ -79,7 +82,7 @@ export default function HomePage() {
                     </div>
 
                     <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
-                        {saudacao}, <span className="text-primary">{usuario.nome}</span>! 👋
+                        {saudacao}, <span className="text-primary">{status?.atendenteName}</span>! 👋
                     </h1>
 
                     <p className="text-muted-foreground text-sm sm:text-base max-w-2xl leading-relaxed italic">
