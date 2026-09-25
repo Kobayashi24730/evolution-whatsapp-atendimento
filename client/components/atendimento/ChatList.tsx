@@ -5,7 +5,7 @@ import { formatarTempoCorrido } from "../../libs/utils";
 import { StatusConfig, ChatListProps } from "@/types/types";
 
 export const statusStyles: Record<string, StatusConfig> = {
-    // Status Ativos e Inicial
+    //? Status Ativos e Inicial
     TRIAGEM: {
         badge: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
         dot: "bg-amber-500",
