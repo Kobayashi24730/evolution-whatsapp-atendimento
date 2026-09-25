@@ -7,29 +7,26 @@ datasource db {
 }
 
 model Atendimento {
-  id              String             @id @default(uuid())
-  clienteNumero   String
-  clienteNome     String?
-  clienteAvatar   String?
-  clienteCpf      String?
-  clienteEmail    String?
+  id               String            @id @default(uuid())
+  clienteNumero    String
+  clienteNome      String?
+  clienteAvatar    String?
+  clienteCpf       String?
+  clienteEmail     String?
+  contratoId       String?
+  contratoPlano    String?
+  contratoStatus   String?
+  status           StatusAtendimento @default(TRIAGEM)
+  aba              String            @default("GERAL")
+  unreadCount      Int               @default(0)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  userId           String?
+  dataEncerramento DateTime?
+  user             User?             @relation(fields: [userId], references: [id])
+  etiquetas        AtendimentoTag[]
+  mensagens        Mensagem[]
 
-  contratoId      String?
-  contratoPlano   String?
-  contratoStatus  String?
-
-  status StatusAtendimento @default(TRIAGEM)
-  dataEncerramento  DateTime?
-  aba             String             @default("GERAL")
-  unreadCount     Int                @default(0)
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-
-  userId          String?
-  user            User?              @relation(fields: [userId], references: [id])
-
-  mensagens       Mensagem[]
-  etiquetas       AtendimentoTag[]
   @@map("Atendimento")
 }
 
@@ -40,29 +37,27 @@ model Mensagem {
   mediaUrl      String?
   mediaName     String?
   caption       String?
-
   fromMe        Boolean     @default(false)
   lida          Boolean     @default(false)
   timestamp     DateTime    @default(now())
-
   atendimentoId String
   atendimento   Atendimento @relation(fields: [atendimentoId], references: [id], onDelete: Cascade)
+
   @@map("Mensagem")
 }
 
 model Etiqueta {
-  id          String           @id @default(uuid())
-  nome        String
-  cor         String           @default("#3B82F6")
+  id           String           @id @default(uuid())
+  nome         String
+  cor          String           @default("#3B82F6")
   atendimentos AtendimentoTag[]
+
   @@map("Etiqueta")
 }
 
-// model de atendimento tag
 model AtendimentoTag {
   atendimentoId String
   etiquetaId    String
-
   atendimento   Atendimento @relation(fields: [atendimentoId], references: [id], onDelete: Cascade)
   etiqueta      Etiqueta    @relation(fields: [etiquetaId], references: [id], onDelete: Cascade)
 
@@ -89,7 +84,7 @@ model Account {
 }
 
 model Session {
-  id           String @id @default(uuid())
+  id           String   @id @default(uuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -117,7 +112,6 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// enum de status do prisma
 enum StatusAtendimento {
   ABERTO
   ESPERA
