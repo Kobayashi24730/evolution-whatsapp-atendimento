@@ -94,3 +94,20 @@ export type StatusConfig = {
     badge: string;
     dot: string;
 };
+
+
+export interface IAtendimentoData {
+    id: string;
+    status: "ABERTO" | "PENDENTE" | "FINALIZADO" | string;
+    createdAt?: string;
+}
+
+export interface ChartProps {
+    atendimentos?: IAtendimentoData[];
+}
+
+export interface WelcomeProps {
+    saudacao: string;
+    motivacao: string;
+    nomeAtendente: string;
+}

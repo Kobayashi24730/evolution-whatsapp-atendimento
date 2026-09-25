@@ -34,23 +34,24 @@ function dataUriToBlobUrl(dataUri: string): string | null {
 }
 
 export function ChatWindow({
-                               atendimentoAtivo,
-                               mensagens,
-                               msg,
-                               error,
-                               setMsg,
-                               onSubmit,
-                               onFinalizar,
-                               onMudarStatus,
-                           }: ChatWindowProps) {
+    atendimentoAtivo,
+    mensagens,
+    msg,
+    error,
+    setMsg,
+    onSubmit,
+    onFinalizar,
+    onMudarStatus,
+}: ChatWindowProps) {
     return (
-        <section className="lg:col-span-8 h-[calc(100vh-150px)] flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+        <section className="lg:col-span-8 h-[calc(100vh-150px)] flex flex-col bg-card border border-border/70 rounded-xl overflow-hidden shadow-sm font-sans">
             {atendimentoAtivo ? (
                 <>
-                    <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-gray-100 bg-white">
-                        <div className="flex items-center gap-3 min-w-0">
+                    {/* Header do Chat */}
+                    <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-border/70 bg-card">
+                        <div className="flex items-center gap-3.5 min-w-0">
                             <div className="relative shrink-0">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 border border-blue-100 flex items-center justify-center overflow-hidden">
+                                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
                                     {atendimentoAtivo.clienteAvatar ? (
                                         <img
                                             src={atendimentoAtivo.clienteAvatar}
@@ -58,43 +59,53 @@ export function ChatWindow({
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <span className="text-sm font-bold text-blue-600">{atendimentoAtivo.clienteNome?.charAt(0).toUpperCase() ?? "?"}</span>
+                                        <span className="text-base font-bold text-primary">
+                                            {atendimentoAtivo.clienteNome?.charAt(0).toUpperCase() ?? "?"}
+                                        </span>
                                     )}
                                 </div>
-                                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
+                                <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-background rounded-full" />
                             </div>
 
-                            <div className="min-w-0">
-                                <h2 className="font-semibold text-gray-800 text-sm leading-tight truncate">{atendimentoAtivo.clienteNome || "Cliente sem nome"}</h2>
-                                <p className="text-[11px] text-gray-400 truncate">{atendimentoAtivo.clienteNumero}</p>
+                            <div className="min-w-0 space-y-0.5">
+                                <h2 className="font-bold text-foreground text-base leading-none truncate">
+                                    {atendimentoAtivo.clienteNome || "Cliente sem nome"}
+                                </h2>
+                                <p className="text-xs font-mono text-muted-foreground truncate">
+                                    {atendimentoAtivo.clienteNumero}
+                                </p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
                             <MediaAttachment
                                 mode="list"
                                 files={atendimentoAtivo.arquivos}
                             />
 
-                            <div className="w-px h-5 bg-gray-200 mx-1" />
-                            <Dropdown status={atendimentoAtivo.status} onSelect={(status) => onMudarStatus(atendimentoAtivo.id, status)}/>
+                            <div className="w-px h-5 bg-border mx-1" />
+                            <Dropdown status={atendimentoAtivo.status} onSelect={(status) => onMudarStatus(atendimentoAtivo.id, status)} />
+                            
                             <button
                                 onClick={() => onFinalizar(atendimentoAtivo.id)}
-                                className="ml-1 text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 active:scale-95 transition-all"
+                                className="ml-1 text-xs font-bold text-destructive border border-destructive/30 hover:bg-destructive/10 px-3.5 py-2 rounded-xl active:scale-95 transition-all cursor-pointer"
                             >
                                 Finalizar
                             </button>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-5 py-4 bg-slate-50 custom-scrollbar">
+                    {/* Área das Mensagens */}
+                    <div className="flex-1 overflow-y-auto px-5 py-4 bg-muted/20 custom-scrollbar">
                         {mensagens.length > 0 ? (
-                            <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-3.5">
                                 {mensagens.map((m: any) => (
-                                    <div key={m.id} className={`flex flex-col max-w-[72%] ${m.fromMe ? "self-end items-end" : "self-start items-start"}`}>
-                                        <span className="text-[10px] font-medium text-gray-400 mb-1 px-1">
+                                    <div key={m.id} className={`flex flex-col max-w-[75%] ${m.fromMe ? "self-end items-end" : "self-start items-start"}`}>
+                                        <span className="text-[11px] font-medium text-muted-foreground mb-1 px-1">
                                             {m.fromMe ? "Você" : atendimentoAtivo.clienteNome || "Cliente"}
                                         </span>
+
+                                        {/* Imagem */}
                                         {m.mediaUrl && m.tipo === "IMAGE" && (() => {
                                             const imageSrc = m.mediaUrl.startsWith("data:") || m.mediaUrl.startsWith("http") ? m.mediaUrl : `data:image/jpeg;base64,${m.mediaUrl}`;
                                             const handleOpenImage = () => {
@@ -107,16 +118,16 @@ export function ChatWindow({
                                                     window.open(blobUrl, "_blank", "noopener,noreferrer");
                                                 }
                                             };
-                                            return(
-                                                <div onClick={handleOpenImage} className="relative group max-w-sm mt-1 overflow-hidden rounded-xl border border-border/40 shadow-sm transition-all duration-200 hover:shadow-md">
+                                            return (
+                                                <div onClick={handleOpenImage} className="relative group max-w-sm mt-0.5 overflow-hidden rounded-xl border border-border/50 bg-card shadow-xs transition-all duration-200 hover:shadow-md cursor-pointer">
                                                     <img
                                                         src={imageSrc}
                                                         alt={m.caption || "Imagem da conversa"}
                                                         loading="lazy"
-                                                        className="w-full h-auto max-h-[320px] object-cover transition-transform duration-300 group-hover:scale-[1.02] active:scale-[0.98]"
+                                                        className="w-full h-auto max-h-[320px] object-cover transition-transform duration-300 group-hover:scale-[1.01]"
                                                     />
-                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center text-white">
-                                                        <div className="p-2 rounded-full bg-black/50 backdrop-blur-sm">
+                                                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center text-white">
+                                                        <div className="p-2.5 rounded-xl bg-black/60 backdrop-blur-md">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                                 <circle cx="11" cy="11" r="8"/>
                                                                 <line x1="21" x2="16.65" y1="21" y2="16.65"/>
@@ -126,38 +137,43 @@ export function ChatWindow({
                                                         </div>
                                                     </div>
                                                     {m.caption && (
-                                                        <div className="p-2.5 pt-2 text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap break-words border-t border-border/20">
+                                                        <div className="p-3 text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap break-words border-t border-border/30 bg-card">
                                                             {m.caption}
                                                         </div>
                                                     )}
                                                 </div>
                                             );
                                         })()}
+
+                                        {/* Áudio */}
                                         {m.mediaUrl && m.tipo === "AUDIO" && (
-                                            <UseAudio m={m}/>
+                                            <UseAudio m={m} />
                                         )}
+
+                                        {/* Vídeo */}
                                         {m.mediaUrl && m.tipo === "VIDEO" && (() => {
                                             const videoSrc = m.mediaUrl.startsWith("data:") || m.mediaUrl.startsWith("http")
                                                 ? m.mediaUrl
                                                 : `data:video/mp4;base64,${m.mediaUrl}`;
-                                            return(
-                                                <div className="relative group max-w-xs sm:max-w-sm mt-1 overflow-hidden rounded-2xl border border-border/40 bg-black/10 dark:bg-black/40 shadow-sm transition-all duration-200 hover:shadow-md">
-                                                    <div className="relative flex items-center justify-center bg-black/80 min-h-[180px]">
+                                            return (
+                                                <div className="relative group max-w-xs sm:max-w-sm mt-0.5 overflow-hidden rounded-xl border border-border/50 bg-black/90 shadow-xs">
+                                                    <div className="relative flex items-center justify-center min-h-[180px]">
                                                         <video
                                                             controls
                                                             src={videoSrc}
-                                                            className="rounded-lg max-w-full mt-1"
+                                                            className="rounded-lg max-w-full"
                                                         />
                                                     </div>
                                                     {m.caption && (
-                                                        <div className="p-2.5 pt-2 text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap break-words border-t border-border/20 bg-card/50">
+                                                        <div className="p-3 text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap break-words border-t border-border/30 bg-card">
                                                             {m.caption}
                                                         </div>
                                                     )}
                                                 </div>
                                             );
                                         })()}
-                                        {/*Ajustado sistema pata baixar o documento ja pronto*/}
+
+                                        {/* Documento */}
                                         {m.mediaUrl && m.tipo === "DOCUMENT" && (() => {
                                             const isPdf = m.mediaName?.toLowerCase().endsWith(".pdf");
                                             const defaultMime = isPdf ? "application/pdf" : "application/octet-stream";
@@ -169,15 +185,18 @@ export function ChatWindow({
                                                     download={finame}
                                                     rel="noopener noreferrer"
                                                     target="_blank"
-                                                    className="mt-1.5 flex items-center gap-3 p-2.5 px-3 bg-muted/40 hover:bg-muted/70 border border-border/40 rounded-xl transition-all duration-200 group max-w-xs sm:max-w-sm no-underline">
-                                                    <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0 group-hover:scale-105 transition-transform">
-                                                        <span className="text-lg">📄</span>
+                                                    className="mt-0.5 flex items-center gap-3 p-3 bg-card hover:bg-muted/60 border border-border/70 rounded-xl transition-all duration-150 group max-w-xs sm:max-w-sm no-underline shadow-xs"
+                                                >
+                                                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary shrink-0 group-hover:scale-105 transition-transform">
+                                                        <span className="text-xl">📄</span>
                                                     </div>
                                                     <div className="flex-1 min-w-0 overflow-hidden">
-                                                        <p className="text-xs font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                                                        <p className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
                                                             {finame}
                                                         </p>
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">{isPdf ? "PDF clique para baixar" : "Documento"}</p>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-mono font-bold mt-0.5">
+                                                            {isPdf ? "PDF • Clique para baixar" : "Documento"}
+                                                        </p>
                                                     </div>
                                                     <div className="text-muted-foreground group-hover:text-primary transition-colors pr-1">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -189,11 +208,15 @@ export function ChatWindow({
                                                 </a>
                                             );
                                         })()}
-                                        {m.texto && !["IMAGE","VIDEO","AUDIO"].includes(m.tipo) && (
+
+                                        {/* Texto Simples */}
+                                        {m.texto && !["IMAGE", "VIDEO", "AUDIO"].includes(m.tipo) && (
                                             <div
-                                                className={`px-4 py-2.5 rounded-2xl shadow-xs text-sm leading-relaxed
-                                                ${m.fromMe ? "bg-blue-600 text-white rounded-tr-sm"
-                                                    : "bg-white text-gray-700 border border-gray-100 rounded-tl-sm"}`}
+                                                className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-xs ${
+                                                    m.fromMe
+                                                        ? "bg-primary text-primary-foreground font-medium rounded-tr-xs"
+                                                        : "bg-card text-foreground border border-border/70 rounded-tl-xs"
+                                                }`}
                                             >
                                                 {m.texto}
                                             </div>
@@ -203,36 +226,37 @@ export function ChatWindow({
                             </div>
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center gap-3 text-center">
-                                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <MessageSquareDashed size={22} className="text-gray-400" />
+                                <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center">
+                                    <MessageSquareDashed size={22} className="text-muted-foreground" />
                                 </div>
-                                <p className="text-sm text-gray-400">Nenhuma mensagem ainda</p>
+                                <p className="text-sm font-medium text-muted-foreground">Nenhuma mensagem ainda</p>
                             </div>
                         )}
                     </div>
 
-                    <div className="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
-                        {error && (<p className="text-xs text-red-500 mb-2 px-1">{error}</p>)}
-                        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                    {/* Input de Mensagem */}
+                    <div className="shrink-0 px-4 py-3 border-t border-border/70 bg-card">
+                        {error && (<p className="text-xs font-semibold text-destructive mb-2 px-1">{error}</p>)}
+                        <div className="flex items-center gap-2.5 px-3.5 py-2 bg-muted/40 border border-border/80 rounded-xl focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                             <input
                                 type="text"
                                 placeholder="Digite sua mensagem..."
                                 value={msg}
                                 onChange={(e) => setMsg(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-                                className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400"
+                                className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground/70 font-medium"
                             />
                             <div className="flex items-center gap-2">
                                 <MediaAttachment
-                                    mode="upload-actions" 
+                                    mode="upload-actions"
                                     onUpload={(files, type) => console.log(files, type)}
                                 />
                                 <button
                                     onClick={onSubmit}
                                     disabled={!msg.trim()}
-                                    className="shrink-0 flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold px-3.5 py-2 rounded-lg active:scale-95 transition-all"
+                                    className="shrink-0 flex items-center gap-1.5 bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl active:scale-95 transition-all cursor-pointer"
                                 >
-                                    <Send size={13} />
+                                    <Send size={14} />
                                     Enviar
                                 </button>
                             </div>
@@ -240,13 +264,13 @@ export function ChatWindow({
                     </div>
                 </>
             ) : (
-                <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
-                        <MessageSquareDashed size={28} className="text-gray-400" />
+                <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
+                    <div className="w-14 h-14 bg-muted/60 rounded-2xl flex items-center justify-center border border-border/40">
+                        <MessageSquareDashed size={28} className="text-muted-foreground" />
                     </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-600">Nenhum chat selecionado</p>
-                        <p className="text-xs text-gray-400 mt-1">Selecione um atendimento na lista para começar</p>
+                    <div className="space-y-1">
+                        <p className="text-base font-bold text-foreground">Nenhum chat selecionado</p>
+                        <p className="text-xs text-muted-foreground">Selecione um atendimento na lista ao lado para iniciar</p>
                     </div>
                 </div>
             )}

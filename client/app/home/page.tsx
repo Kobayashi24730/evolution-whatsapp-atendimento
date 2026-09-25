@@ -13,6 +13,7 @@ import {
     Zap,
     TrendingUp
 } from "lucide-react";
+import { Welcome } from "@/components/home/welcome";
 
 export default function HomePage() {
     const { status } = useHome();
@@ -71,27 +72,11 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-background text-foreground p-6 lg:p-10 space-y-8 max-w-7xl mx-auto font-sans antialiased">
 
-            {/* 1. SEÇÃO DE BOAS-VINDAS & FRASE MOTIVACIONAL */}
-            <section className="relative overflow-hidden rounded-2xl bg-card border border-border p-8 lg:p-10 shadow-md transition-all hover:shadow-lg">
-                <div className="absolute -top-12 -right-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+            {/* SEÇÃO DE BOAS-VINDAS & FRASE MOTIVACIONAL */}
+            
+            <Welcome saudacao={saudacao} motivacao={motivacao} nomeAtendente={String(status?.atendenteName)} />
 
-                <div className="relative z-10 space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-primary/10 text-primary text-sm font-medium tracking-wide border border-primary/20">
-                        <Sparkles className="w-4 h-4" />
-                        <span>Painel Operacional</span>
-                    </div>
-
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-                        {saudacao}, <span className="text-primary">{status?.atendenteName || "Atendente"}</span> 👋
-                    </h1>
-
-                    <p className="text-muted-foreground text-base sm:text-lg max-w-3xl leading-relaxed italic font-normal">
-                        "{motivacao}"
-                    </p>
-                </div>
-            </section>
-
-            {/* 2. INFORMAÇÕES RÁPIDAS & MÉTRICAS (KPIs) */}
+            {/* INFORMAÇÕES RÁPIDAS & MÉTRICAS (KPIs) */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
                 {/* Card 1 */}
@@ -149,7 +134,7 @@ export default function HomePage() {
 
             </section>
 
-            {/* 3. NOTÍCIAS DAS ATUALIZAÇÕES DO SISTEMA E ACESSO RÁPIDO */}
+            {/* NOTÍCIAS DAS ATUALIZAÇÕES DO SISTEMA E ACESSO RÁPIDO */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 {/* Feed de Atualizações */}

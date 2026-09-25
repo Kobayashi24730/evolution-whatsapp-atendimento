@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, User, Hash, Phone, Loader2, SearchX, X } from "lucide-react";
+import { Search, Hash, Phone, Loader2, SearchX, X } from "lucide-react";
 import ChatWindow from "@/components/search/ChatWindow";
 
 interface Card {
@@ -12,13 +12,13 @@ interface Card {
 }
 
 const statusStyles: Record<string, { badge: string; dot: string; label: string }> = {
-    ABERTO:         { badge: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-400", label: "Aberto"          },
-    EM_ATENDIMENTO: { badge: "bg-blue-50   text-blue-700   border-blue-200",     dot: "bg-blue-400",    label: "Em atendimento"  },
-    TRIAGEM:        { badge: "bg-amber-50  text-amber-700  border-amber-200",    dot: "bg-amber-400",   label: "Triagem"         },
-    FECHADO:        { badge: "bg-gray-100  text-gray-500   border-gray-200",     dot: "bg-gray-300",    label: "Fechado"         },
-    AGUARDANDO:     { badge: "bg-purple-50 text-purple-700 border-purple-200",   dot: "bg-purple-400",  label: "Aguardando"      },
+    ABERTO:         { badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", dot: "bg-emerald-500", label: "Aberto" },
+    EM_ATENDIMENTO: { badge: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20", dot: "bg-blue-500", label: "Em atendimento" },
+    TRIAGEM:        { badge: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20", dot: "bg-amber-500", label: "Triagem" },
+    FECHADO:        { badge: "bg-muted text-muted-foreground border-border/70", dot: "bg-muted-foreground/60", label: "Fechado" },
+    AGUARDANDO:     { badge: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20", dot: "bg-purple-500", label: "Aguardando" },
 };
-const statusDefault = { badge: "bg-gray-100 text-gray-600 border-gray-200", dot: "bg-gray-300", label: "Desconhecido" };
+const statusDefault = { badge: "bg-muted text-muted-foreground border-border/70", dot: "bg-muted-foreground/60", label: "Desconhecido" };
 
 export default function Procurar() {
     const router = useRouter();
@@ -47,16 +47,16 @@ export default function Procurar() {
             } finally {
                 setLoading(false);
             }
-        }
+        };
         getValues();
     }, []);
 
     useEffect(() => {
-        const handleKeyDow = (e: KeyboardEvent) => {
+        const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") setOpenChatWindow(false);
-        }
-        window.addEventListener("keydown", handleKeyDow);
-        return () => window.removeEventListener("keydown", handleKeyDow);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
     const filteredData = data.filter((i) => {
@@ -69,41 +69,57 @@ export default function Procurar() {
     });
 
     return (
-        <section className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+        <section className="max-w-4xl mx-auto px-4 py-8 space-y-6 font-sans">
+            {/* Header da Página */}
             <div>
-                <h1 className="text-xl font-bold text-gray-800">Buscar atendimentos</h1>
-                <p className="text-sm text-gray-400 mt-0.5">Pesquise por nome, telefone ou protocolo</p>
+                <h1 className="text-xl font-bold text-foreground">Buscar atendimentos</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                    Pesquise por nome, telefone ou código de protocolo
+                </p>
             </div>
 
-            <div className="relative">
-                <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    type="text"
-                    placeholder="Nome, celular ou protocolo..."
-                    className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
-                {search && (
-                    <button
-                        onClick={() => setSearch("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-                    >Limpar</button>
+            {/* Input de Busca */}
+            <div className="space-y-2">
+                <div className="relative">
+                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        type="text"
+                        placeholder="Nome, celular ou protocolo..."
+                        className="w-full pl-11 pr-20 py-3 bg-card border border-border/70 rounded-xl shadow-xs text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    />
+                    {search && (
+                        <button
+                            onClick={() => setSearch("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
+                        >
+                            Limpar
+                        </button>
+                    )}
+                </div>
+
+                {!loading && search && (
+                    <p className="text-xs text-muted-foreground px-1">
+                        {filteredData.length} resultado{filteredData.length !== 1 ? "s" : ""} para{" "}
+                        <span className="font-semibold text-foreground">"{search}"</span>
+                    </p>
                 )}
             </div>
 
-            {!loading && search && (
-                <p className="text-xs text-gray-400 -mt-2">
-                    {filteredData.length} resultado{filteredData.length !== 1 ? "s" : ""} para <span className="font-semibold text-gray-600">"{search}"</span>
-                </p>
-            )}
-
+            {/* Modal de Detalhes do Chat */}
             {openChatWindow && (
-                <div onClick={() => setOpenChatWindow(false)} className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-4xl">
+                <div
+                    onClick={() => setOpenChatWindow(false)}
+                    className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="relative w-full max-w-4xl shadow-2xl"
+                    >
                         <button
                             onClick={() => setOpenChatWindow(false)}
-                            className="absolute -top-3 -right-3 z-10 p-2 bg-white text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full shadow-md border border-gray-200 transition-colors focus:outline-none"
+                            className="absolute -top-3 -right-3 z-10 p-2 bg-card text-muted-foreground hover:text-foreground hover:bg-muted rounded-full shadow-md border border-border transition-colors cursor-pointer focus:outline-none"
                             title="Fechar (Esc)"
                         >
                             <X size={18} />
@@ -114,63 +130,69 @@ export default function Procurar() {
                 </div>
             )}
 
+            {/* Estados da Interface */}
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
-                    <Loader2 size={28} className="text-blue-500 animate-spin" />
-                    <p className="text-sm text-gray-400">Carregando atendimentos...</p>
+                    <Loader2 size={28} className="text-primary animate-spin" />
+                    <p className="text-xs text-muted-foreground font-medium">Carregando atendimentos...</p>
                 </div>
             ) : filteredData.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                    <div className="w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm">
-                        <SearchX size={22} className="text-gray-400" />
+                <div className="flex flex-col items-center justify-center py-16 gap-3 bg-card rounded-2xl border border-dashed border-border/70 text-center">
+                    <div className="w-12 h-12 bg-muted/60 border border-border/50 rounded-xl flex items-center justify-center shadow-xs">
+                        <SearchX size={22} className="text-muted-foreground" />
                     </div>
-                    <div className="text-center">
-                        <p className="text-sm font-medium text-gray-600">Nenhum atendimento encontrado</p>
-                        <p className="text-xs text-gray-400 mt-1">Tente buscar por outro termo</p>
+                    <div className="space-y-1">
+                        <p className="text-sm font-bold text-foreground">Nenhum atendimento encontrado</p>
+                        <p className="text-xs text-muted-foreground">Tente buscar por outro termo ou limpe os filtros</p>
                     </div>
                 </div>
             ) : (
+                /* Grid de Cards */
                 <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2">
-                    {filteredData.map((i: any) => {
+                    {filteredData.map((i) => {
                         const style = statusStyles[i.status] ?? statusDefault;
                         const inicial = i.clienteNome?.charAt(0).toUpperCase() ?? "?";
+                        const protocolDisplay = String(i.id).length > 6 ? `${String(i.id).slice(0, 6)}...` : String(i.id);
+
                         return (
                             <div
                                 key={i.id}
                                 onClick={() => {
                                     setOpenChatWindow(true);
-                                    setChatId(i.id);
+                                    setChatId(String(i.id));
                                 }}
-                                className="group bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all duration-150 cursor-pointer flex flex-col gap-3"
+                                className="group bg-card p-4 rounded-xl border border-border/70 shadow-xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-150 cursor-pointer flex flex-col justify-between gap-3"
                             >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 border border-blue-100 flex items-center justify-center shrink-0">
-                                            <span className="text-sm font-bold text-blue-600">{inicial}</span>
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                                            <span className="text-sm font-bold text-primary">{inicial}</span>
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-gray-800 truncate">{i.clienteNome || "Sem nome"}</p>
-                                            <div className="flex items-center gap-1 text-[11px] text-gray-400 mt-0.5">
-                                                <Phone size={10} />
-                                                <span>{i.clienteNumero}</span>
+                                        <div className="min-w-0 space-y-0.5">
+                                            <p className="text-sm font-bold text-foreground truncate">
+                                                {i.clienteNome || "Sem nome"}
+                                            </p>
+                                            <div className="flex items-center gap-1 text-[11px] font-mono text-muted-foreground">
+                                                <Phone size={11} className="shrink-0" />
+                                                <span className="truncate">{i.clienteNumero}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-1.5 shrink-0">
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${style.badge}`}>
+                                    <div className="shrink-0">
+                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${style.badge}`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
                                             {style.label}
                                         </span>
                                     </div>
                                 </div>
-                                <hr className="border-gray-100" />
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                                        <Hash size={11} />
-                                        <span className="font-mono font-medium text-gray-500">{i.id}</span>
+
+                                <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                                    <div className="flex items-center gap-1 text-[11px] font-mono text-muted-foreground">
+                                        <Hash size={11} className="shrink-0" />
+                                        <span>{protocolDisplay}</span>
                                     </div>
-                                    <span className="text-[11px] font-medium text-blue-500 group-hover:text-blue-600 transition-colors">
+                                    <span className="text-[11px] font-bold text-primary group-hover:underline transition-all">
                                         Ver chat →
                                     </span>
                                 </div>
