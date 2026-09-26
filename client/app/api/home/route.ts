@@ -28,7 +28,8 @@ export async function GET() {
       }),
       prisma.atendimento.count({
         where: {
-          dataEncerramento: {
+          status: { in: ["FINALIZADO", "RESOLVIDO", "CANCELADO"]},
+          updatedAt: {
             gte: inicioDoDia,
             lte: fimDoDia,
           },
@@ -36,7 +37,9 @@ export async function GET() {
       }),
       prisma.atendimento.count({
         where: {
-          dataEncerramento: null,
+          NOT: {
+            status: { in: ["FINALIZADO", "RESOLVIDO", "CANCELADO"]},
+          }
         },
       }),
     ]);
@@ -48,13 +51,13 @@ export async function GET() {
       atendenteName: userLogado,
     });
   } catch (err: any) {
-    console.error("====== ERRO DOCKER PRISMA ======");
+    console.error("falha no fetch stats");
     console.error(err);
 
-    // Retorna a mensagem de erro exata no JSON para podermos ler no navegador
+    //? Retorna a mensagem de erro exata no JSON para podermos ler no navegador
     return NextResponse.json(
       { 
-        message: "Failed to fetch stats", 
+        message: "falha no fetch stats", 
         errorDetails: err?.message || String(err)
       },
       { status: 500 }

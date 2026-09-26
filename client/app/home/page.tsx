@@ -18,29 +18,6 @@ import { Welcome } from "@/components/home/welcome";
 export default function HomePage() {
     const { status } = useHome();
 
-    // Frase motivacional baseada na hora atual
-    const getSaudacaoEMotivacao = () => {
-        const hora = new Date().getHours();
-        if (hora < 12) {
-            return {
-                saudacao: "Bom dia",
-                motivacao: "Cada mensagem atendida com atenção transforma um cliente em parceiro. Bom trabalho hoje!"
-            };
-        } else if (hora < 18) {
-            return {
-                saudacao: "Boa tarde",
-                motivacao: "O ritmo está ótimo! Mantenha o foco e garanta que nenhum atendimento fique sem resposta."
-            };
-        } else {
-            return {
-                saudacao: "Boa noite",
-                motivacao: "Reta final do dia! Organize as pendências para começar o dia de amanhã com tranquilidade."
-            };
-        }
-    };
-
-    const { saudacao, motivacao } = getSaudacaoEMotivacao();
-
     // Novidades/Atualizações do Sistema
     const atualizacoesSistema = [
         {
@@ -74,7 +51,7 @@ export default function HomePage() {
 
             {/* SEÇÃO DE BOAS-VINDAS & FRASE MOTIVACIONAL */}
             
-            <Welcome saudacao={saudacao} motivacao={motivacao} nomeAtendente={String(status?.atendenteName)} />
+            <Welcome nomeAtendente={String(status?.atendenteName)} />
 
             {/* INFORMAÇÕES RÁPIDAS & MÉTRICAS (KPIs) */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

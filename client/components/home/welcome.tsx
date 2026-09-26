@@ -2,8 +2,26 @@
 import { Sparkles } from "lucide-react";
 import { WelcomeProps } from "@/types/types";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
-export function Welcome({ saudacao, motivacao, nomeAtendente }: WelcomeProps) {
+export function Welcome({ nomeAtendente }: WelcomeProps) {
+    const [saudacao, setSaudacao] = useState<String | null>("");
+    const [motivacao, setMotivacao] = useState<String | null>("");
+
+    useEffect(() => {
+        const hora = new Date().getHours();
+        if (hora < 12) {
+            setSaudacao("Bom dia");
+            setMotivacao("Cada mensagem atendida com atenção transforma um cliente em parceiro. Bom trabalho hoje!");
+        } else if (hora < 18) {
+            setSaudacao("Boa tarde");
+            setMotivacao("O ritmo está ótimo! Mantenha o foco e garanta que nenhum atendimento fique sem resposta.");
+        } else {
+            setSaudacao("Boa noite");
+            setMotivacao("Reta final do dia! Organize as pendências para começar o dia de amanhã com tranquilidade.");
+        }
+    }, []);
+
     
     return (
         <section className="relative overflow-hidden rounded-2xl bg-card border border-border p-8 lg:p-10 shadow-md transition-all hover:shadow-lg">
@@ -24,13 +42,11 @@ export function Welcome({ saudacao, motivacao, nomeAtendente }: WelcomeProps) {
                 </p>
             </div>
 
-            //? Quadrados flutuantes
             <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="absolute -bottom-12 -right-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"
-            />
+                animate={{ y: [-8, 8, -8], rotate: [0, 10, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-4 right-2 sm:right-6 w-16 h-16 bg-white/10 dark:bg-blue/5 backdrop-blur-md border border-blue/20 rounded-2xl shadow-lg z-0"
+           />
 
         </section>
     );

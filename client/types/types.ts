@@ -32,9 +32,19 @@ export interface ChamadoCritico {
 }
 
 export interface DashboardStatsData {
-    kpis: DashboardKPIs;
+    kpis: defaultStats;
     filaCritica: ChamadoCritico[];
 }
+
+export interface defaultStats {
+    totalAbertos: number,
+    aguardandoAprovacao: number,
+    concluidos: number,
+    vencidos: number,
+    respostaVencida: number,
+    aVencerHoje: number,
+    meusVencidos: number,
+};
 
 export interface KpiProps {
     label: string;
@@ -107,7 +117,21 @@ export interface ChartProps {
 }
 
 export interface WelcomeProps {
-    saudacao: string;
-    motivacao: string;
     nomeAtendente: string;
+}
+
+export interface Mensagem {
+    id: string;
+    atendimentoId: string;
+    texto: string;
+    by: boolean; // true = atendente, false = cliente
+    createdAt: string;
+}
+
+export interface Atendimento {
+    id: string;
+    clienteNome: string;
+    clienteNumero: string;
+    status: string;
+    updatedAt: string;
 }
