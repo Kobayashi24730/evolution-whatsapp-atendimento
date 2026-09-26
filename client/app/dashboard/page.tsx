@@ -3,7 +3,7 @@
 import { ChartAtendimentos } from "@/components/Chart";
 import FilaUrgestes from "@/components/dashboard/Fila";
 import { KpiProps } from "@/types/types";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useRealtimeApp } from "@/hooks/useRealtimeApp";
 import { Headphones, Clock, CheckCircle, AlertTriangle, MessageSquare, Timer, XCircle, Newspaper } from "lucide-react";
 import { Widget } from "@/components/common/widget";
 
@@ -25,8 +25,9 @@ function KpiCard({ label, value, icon: Icon, bg, iconBg }: KpiProps) {
 }
 
 
+
 export default function DashboardChamados() {
-    const { stats, loading } = useDashboardStats();
+    const { dashboardStats, loading } = useRealtimeApp();
 
     const noticias = [
         { data: "24/08", hora: "14:50", titulo: "Projetos e Melhorias DAFI/S", descricao: "Manutenção programada dos servidores..." },
@@ -34,13 +35,13 @@ export default function DashboardChamados() {
         { data: "24/08", hora: "14:51", titulo: "Treinamento em SIAGRO",        descricao: "Nova sessão marcada para a próxima semana." },
     ];
     const kpis: KpiProps[] = [
-        { label: "Chamados abertos",                          value: stats?.kpis?.totalAbertos ?? 0,          icon: Headphones,   bg: "bg-blue-600",   iconBg: "bg-blue-500"   },
-        { label: "Aguardando aprovação",                      value: stats?.kpis?.aguardandoAprovacao ?? 0,  icon: Clock,        bg: "bg-slate-700",  iconBg: "bg-slate-600"  },
-        { label: "Chamados concluídos",                       value: stats?.kpis?.concluidos ?? 0,           icon: CheckCircle,  bg: "bg-emerald-600",iconBg: "bg-emerald-500"},
-        { label: "Vencidos não concluídos",                   value: stats?.kpis?.vencidos ?? 0,             icon: AlertTriangle,bg: "bg-amber-500",  iconBg: "bg-amber-400"  },
-        { label: "1ª Resposta vencida",                       value: stats?.kpis?.respostaVencida ?? 0,      icon: MessageSquare,bg: "bg-yellow-600", iconBg: "bg-yellow-500" },
-        { label: "A vencer hoje",                             value: stats?.kpis?.aVencerHoje ?? 0,          icon: Timer,        bg: "bg-rose-500",   iconBg: "bg-rose-400"   },
-        { label: "Meus chamados vencidos",                    value: stats?.kpis?.meusVencidos ?? 0,         icon: XCircle,      bg: "bg-orange-600", iconBg: "bg-orange-500" },
+        { label: "Chamados abertos",                          value: dashboardStats?.kpis?.totalAbertos ?? 0,          icon: Headphones,   bg: "bg-blue-600",   iconBg: "bg-blue-500"   },
+        { label: "Aguardando aprovação",                      value: dashboardStats?.kpis?.aguardandoAprovacao ?? 0,  icon: Clock,        bg: "bg-slate-700",  iconBg: "bg-slate-600"  },
+        { label: "Chamados concluídos",                       value: dashboardStats?.kpis?.concluidos ?? 0,           icon: CheckCircle,  bg: "bg-emerald-600",iconBg: "bg-emerald-500"},
+        { label: "Vencidos não concluídos",                   value: dashboardStats?.kpis?.vencidos ?? 0,             icon: AlertTriangle,bg: "bg-amber-500",  iconBg: "bg-amber-400"  },
+        { label: "1ª Resposta vencida",                       value: dashboardStats?.kpis?.respostaVencida ?? 0,      icon: MessageSquare,bg: "bg-yellow-600", iconBg: "bg-yellow-500" },
+        { label: "A vencer hoje",                             value: dashboardStats?.kpis?.aVencerHoje ?? 0,          icon: Timer,        bg: "bg-rose-500",   iconBg: "bg-rose-400"   },
+        { label: "Meus chamados vencidos",                    value: dashboardStats?.kpis?.meusVencidos ?? 0,         icon: XCircle,      bg: "bg-orange-600", iconBg: "bg-orange-500" },
     ];
 
     return (

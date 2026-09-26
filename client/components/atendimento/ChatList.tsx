@@ -1,11 +1,12 @@
 'use client';
-import { AtendimentoComTipo } from "@/types/types";
-import { User, MessageCircle } from "lucide-react";
-import { formatarTempoCorrido } from "../../libs/utils";
-import { StatusConfig, ChatListProps } from "@/types/types";
+
+import React from "react";
+import { MessageCircle } from "lucide-react";
+import { formatarTempoCorrido } from "@/libs/utils";
+import { StatusConfig, ChatListProps, AtendimentoComTipo } from "@/types/types";
 
 export const statusStyles: Record<string, StatusConfig> = {
-    //? Status Ativos e Inicial
+    // Status Ativos e Inicial
     TRIAGEM: {
         badge: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
         dot: "bg-amber-500",
@@ -19,7 +20,7 @@ export const statusStyles: Record<string, StatusConfig> = {
         dot: "bg-blue-500",
     },
 
-    //? Status de Espera / Pendência
+    // Status de Espera / Pendência
     AGUARDANDO: {
         badge: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800",
         dot: "bg-purple-500",
@@ -33,7 +34,7 @@ export const statusStyles: Record<string, StatusConfig> = {
         dot: "bg-cyan-500",
     },
 
-    //? Status de Conclusão e Cancelamento
+    // Status de Conclusão e Cancelamento
     RESOLVIDO: {
         badge: "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-800",
         dot: "bg-teal-500",
@@ -70,7 +71,6 @@ export const statusLabel: Record<string, string> = {
     CANCELADO: "Cancelado",
 };
 
-
 export function ChatList({ atendimentos = [], atendimentoAtivoId, onSelectChat }: ChatListProps) {
     return (
         <aside className="lg:col-span-4 flex flex-col gap-3 overflow-hidden font-sans">
@@ -92,8 +92,11 @@ export function ChatList({ atendimentos = [], atendimentoAtivoId, onSelectChat }
                 )}
 
                 {atendimentos.map((atendimento) => {
-                    const mensagens = atendimento.mensagens || [];
-                    const ultimaMsg = mensagens.at(-1);
+                    // Trata as mensagens mesmo que venham de Atendimento simples ou AtendimentoComTipo
+                    const mensagens = (atendimento as AtendimentoComTipo).mensagens || [];
+                    const ultimaMsg = mensagens.length > 0 ? mensagens[mensagens.length - 1] : null;
+                    
+                    const clienteAvatar = (atendimento as any).clienteAvatar as string | undefined;
                     const nomeCliente = atendimento.clienteNome || atendimento.clienteNumero || "Sem nome";
                     const inicialNome = nomeCliente.charAt(0).toUpperCase();
                     const isAtivo = atendimentoAtivoId === atendimento.id;
@@ -118,9 +121,9 @@ export function ChatList({ atendimentos = [], atendimentoAtivoId, onSelectChat }
 
                             <div className="relative shrink-0">
                                 <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
-                                    {atendimento.clienteAvatar ? (
+                                    {clienteAvatar ? (
                                         <img
-                                            src={atendimento.clienteAvatar}
+                                            src={clienteAvatar}
                                             alt={nomeCliente}
                                             className="w-full h-full object-cover"
                                         />
@@ -137,7 +140,7 @@ export function ChatList({ atendimentos = [], atendimentoAtivoId, onSelectChat }
                                         {nomeCliente}
                                     </p>
                                     <span className="text-xs font-mono text-muted-foreground whitespace-nowrap shrink-0">
-                                        {formatarTempoCorrido(atendimento.createdAt)}
+                                        {formatarTempoCorrido(atendimento.updatedAt)}
                                     </span>
                                 </div>
 

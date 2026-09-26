@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useHome } from "@/hooks/useHome";
+import { useRealtimeApp } from "@/hooks/useRealtimeApp";
 import {
     Sparkles,
     Bell,
@@ -16,7 +16,7 @@ import {
 import { Welcome } from "@/components/home/welcome";
 
 export default function HomePage() {
-    const { status } = useHome();
+    const { homeStats } = useRealtimeApp();
 
     // Novidades/Atualizações do Sistema
     const atualizacoesSistema = [
@@ -51,7 +51,7 @@ export default function HomePage() {
 
             {/* SEÇÃO DE BOAS-VINDAS & FRASE MOTIVACIONAL */}
             
-            <Welcome nomeAtendente={String(status?.atendenteName)} />
+            <Welcome nomeAtendente={String(homeStats?.atendenteName)} />
 
             {/* INFORMAÇÕES RÁPIDAS & MÉTRICAS (KPIs) */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -64,7 +64,7 @@ export default function HomePage() {
                             <MessageSquare className="w-5 h-5" />
                         </div>
                     </div>
-                    <div className="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono">{status?.totalAbertos ?? 0}</div>
+                    <div className="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono">{homeStats?.totalAbertos ?? 0}</div>
                     <p className="text-xs sm:text-sm text-muted-foreground">Atendimentos iniciados no dia</p>
                 </div>
 
@@ -90,7 +90,7 @@ export default function HomePage() {
                             <CheckCircle2 className="w-5 h-5" />
                         </div>
                     </div>
-                    <div className="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono">{status?.totalFinalizados ?? 0}</div>
+                    <div className="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono">{homeStats?.totalFinalizados ?? 0}</div>
                     <p className="text-xs sm:text-sm text-muted-foreground">Meta diária recomendada: 30</p>
                 </div>
 

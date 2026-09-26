@@ -11,16 +11,16 @@ import {
     CartesianGrid,
 } from "recharts";
 import { MessageSquare, CheckCircle2, Clock, Loader2 } from "lucide-react";
-import { useDashboardStats } from "../hooks/useDashboardStats";
+import { useRealtimeApp } from '@/hooks/useRealtimeApp';
 
 export function ChartAtendimentos() {
-    const { stats, loading, error } = useDashboardStats();
+    const { dashboardStats, loading, error } = useRealtimeApp();
 
     // 1. Métricas do topo tratadas com valores padrão seguros
     const metricas = useMemo(() => {
-        const abertos = stats?.kpis?.totalAbertos ?? 0;
-        const pendentes = stats?.kpis?.aguardandoAprovacao ?? 0;
-        const finalizados = stats?.kpis?.concluidos ?? 0;
+        const abertos = dashboardStats?.kpis?.totalAbertos ?? 0;
+        const pendentes = dashboardStats?.kpis?.aguardandoAprovacao ?? 0;
+        const finalizados = dashboardStats?.kpis?.concluidos ?? 0;
 
         return {
             abertos,
@@ -28,7 +28,7 @@ export function ChartAtendimentos() {
             finalizados,
             total: abertos + pendentes + finalizados,
         };
-    }, [stats]);
+    }, [dashboardStats]);
 
     // 2. Montagem dos dados para o gráfico de área
     const chartData = useMemo(() => {
@@ -46,8 +46,8 @@ export function ChartAtendimentos() {
         }
 
         // Se houver uma lista de atendimentos detalhada em `stats.atendimentos`
-        if (Array.isArray(stats.kpis?.totalAbertos) && stats.kpis?.totalAbertos.length > 0) {
-            stats.kpis?.totalAbertos.forEach((item: any) => {
+        if (Array.isArray(dashboardStats?.kpis?.totalAbertos) && dashboardStats?.kpis?.totalAbertos.length > 0) {
+            dashboardStats?.kpis?.totalAbertos.forEach((item: any) => {
                 if (!item?.createdAt) return;
                 const dataChave = new Date(item.createdAt).toISOString().split("T")[0];
                 if (ultimosDias[dataChave]) {
@@ -71,7 +71,7 @@ export function ChartAtendimentos() {
             { dia: "Sáb", abertos: 10, finalizados: 8 },
             { dia: "Dom", abertos: 5, finalizados: 5 },
         ];
-    }, [stats]);
+    }, [dashboardStats]);
 
     if (loading) {
         return (

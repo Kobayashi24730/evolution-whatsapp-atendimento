@@ -1,28 +1,30 @@
-'use client'
+'use client';
 
 import { Atendimento, Mensagem, DashboardStatsData, HomeStats } from "@/types/types";
 import { useState, useMemo, useEffect, useCallback } from "react";
 
-export default function useRealtimeApp() {
-    //? Estadoss do atendimento e do chat
+export function useRealtimeApp() {
+    // --- ESTADOS DO ATENDIMENTO E CHAT ---
     const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
     const [mensagens, setMensagens] = useState<Mensagem[]>([]);
     const [idAtendimentoAtivo, setIdAtendimentoAtivo] = useState<string | null>(null);
     const [inputMsg, setInputMsg] = useState<string>("");
+    const [isOpen, setIsOpen] = useState<boolean>(false);
 
-    //? Estados do dashboard e home
+    // --- ESTADOS DO DASHBOARD E HOME ---
     const [dashboardStats, setDashboardStats] = useState<DashboardStatsData | null>(null);
     const [homeStats, setHomeStats] = useState<HomeStats | null>(null);
 
-    //? Estados de controle
+    // --- ESTADOS DE CONTROLE ---
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean | null>(true);
-    
+    const [loading, setLoading] = useState<boolean>(true);
+
     const atendimentoAtivo = useMemo(() => {
         if (!atendimentos.length) return null;
         return atendimentos.find(item => item.id === idAtendimentoAtivo) ?? null;
     }, [atendimentos, idAtendimentoAtivo]);
 
+    // 1. CARREGAMENTO INICIAL
     const fetchDadosIniciais = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -31,46 +33,48 @@ export default function useRealtimeApp() {
             const [resAtendimentos, resHome, resDashboard] = await Promise.all([
                 fetch("/api/atendimento").then(res => res.json()),
                 fetch("/api/home").then(res => res.json()),
-                fetch("/api/dashboard").then(res => res.json())
-
+                fetch("/api/dashboard/status").then(res => res.json())
             ]);
+
             if (resAtendimentos && Array.isArray(resAtendimentos.data)) {
                 setAtendimentos(resAtendimentos.data);
-                setIdAtendimentoAtivo(prev =>resAtendimentos.data[0]?.id ?? null);
+                // Não sobrescreve se o usuário já tiver selecionado um ID ou vindo da URL
+                setIdAtendimentoAtivo(prev => prev ?? resAtendimentos.data[0]?.id ?? null);
             }
-            if (resDashboard.kpis) {
+            if (resDashboard?.kpis) {
                 setDashboardStats(resDashboard);
             }
             if (resHome) {
                 setHomeStats(resHome);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Erro ao buscar dados iniciais:", err);
+            setError("Erro ao carregar dados iniciais.");
         } finally {
             setLoading(false);
         }
     }, []);
 
-    //? Busca mensagens ao trocar de atendimento ativo(chat)
-    const fetchMenssagens = useCallback(async (atendimentoId: string) => {
+    // 2. BUSCA MENSAGENS DO CHAT SELECIONADO
+    const fetchMensagens = useCallback(async (atendimentoId: string) => {
         try {
             const res = await fetch(`/api/mensagens?atendimentoId=${atendimentoId}`);
             const response = await res.json();
             setMensagens(Array.isArray(response?.data) ? response.data : []);
-        } catch (error) {
-            console.error("Erro ao buscar mensagens:", error);   
+        } catch (err) {
+            console.error("Erro ao buscar mensagens:", err);
         }
     }, []);
 
     useEffect(() => {
         if (idAtendimentoAtivo) {
-            fetchMenssagens(idAtendimentoAtivo);
+            fetchMensagens(idAtendimentoAtivo);
         } else {
             setMensagens([]);
         }
-    }, [idAtendimentoAtivo, fetchMenssagens]);
+    }, [idAtendimentoAtivo, fetchMensagens]);
 
-    //? Coneção em tempo real SEE(Serve-sent Event)
+    // 3. CONEXÃO SERVER-SENT EVENTS (SSE)
     useEffect(() => {
         fetchDadosIniciais();
 
@@ -79,10 +83,10 @@ export default function useRealtimeApp() {
         eventSource.addEventListener("Nova mensagem", (event) => {
             const novaMensagem: Mensagem = JSON.parse(event.data);
             if (novaMensagem.atendimentoId === idAtendimentoAtivo) {
-                setMensagens(prev => [...prev, novaMensagem]); //? Se for o atendimento ativo, adiciona a nova mensagem
+                setMensagens(prev => [...prev, novaMensagem]);
             }
 
-            //? Atualiza para o atendimento ir para o topo
+            // Move o atendimento atualizado para o topo da lista
             setAtendimentos(prev => prev.map(at => at.id === novaMensagem.atendimentoId ? 
                 { ...at, updatedAt: new Date().toISOString() } : at
             ));
@@ -102,20 +106,21 @@ export default function useRealtimeApp() {
         });
 
         eventSource.onerror = (err) => {
-            console.error("Erro na coneção SEE:", err);
+            console.error("Erro na conexão SSE:", err);
             eventSource.close();
-        }
+        };
 
         return () => {
             eventSource.close();
         };
     }, [fetchDadosIniciais, idAtendimentoAtivo]);
 
+    // 4. AÇÕES DA INTERFACE
     const enviarMensagem = async () => {
         if (!inputMsg.trim() || !idAtendimentoAtivo) return;
 
         const text = inputMsg;
-        setInputMsg("");
+        setInputMsg(""); // Optimistic update
 
         try {
             const res = await fetch("/api/atendimento", {
@@ -128,13 +133,15 @@ export default function useRealtimeApp() {
             console.error("Erro ao enviar mensagem:", err);
             setError("Erro ao enviar mensagem");
         }
-    }
-    const mudarStatusAtendimento = async (id: string, novoStatus: string) => {
+    };
+
+    const mudarStatusAtendimento = async (id: string | number, novoStatus: string) => {
         try {
+            const idStr = String(id);
             const res = await fetch("/api/status", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: novoStatus, id }),
+                body: JSON.stringify({ status: novoStatus, id: idStr }),
             });
             if (!res.ok) throw new Error("Erro ao mudar status");
         } catch (err) {
@@ -142,12 +149,13 @@ export default function useRealtimeApp() {
         }
     };
 
-    const finalizarAtendimento = async (id: string) => {
+    const finalizarAtendimento = async (id: string | number) => {
         try {
+            const idStr = String(id);
             const res = await fetch("/api/finalizar", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ atendimentoId: id }),
+                body: JSON.stringify({ atendimentoId: idStr }),
             });
             if (!res.ok) throw new Error("Erro ao finalizar atendimento");
         } catch (err) {
@@ -166,10 +174,12 @@ export default function useRealtimeApp() {
         inputMsg,
         loading,
         error,
+        isOpen,
 
         // Setters / Ações
         setIdAtendimentoAtivo,
         setInputMsg,
+        setIsOpen,
         enviarMensagem,
         mudarStatusAtendimento,
         finalizarAtendimento,

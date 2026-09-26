@@ -1,19 +1,60 @@
 import { Prisma } from "@prisma/client";
 import React from "react";
-import MediaAttachment from '../components/common/MediaAttachment';
 
-
-export interface ChatWindowProps {
-    id: string;
-}
+// --- PRISMA TYPES ---
 
 export type AtendimentoComTipo = Prisma.AtendimentoGetPayload<{
     include: {
         mensagens: true;
-    }
+    };
 }>;
 
+// --- MODELOS BASE ---
+
+export interface Mensagem {
+    id: string;
+    atendimentoId: string;
+    texto: string;
+    by: boolean; // true = atendente, false = cliente
+    createdAt: string;
+}
+
+export interface Atendimento {
+    id: string;
+    clienteNome: string;
+    clienteNumero: string;
+    status: string;
+    updatedAt: string;
+}
+
+export interface IAtendimentoData {
+    id: string;
+    status: "ABERTO" | "PENDENTE" | "FINALIZADO" | string;
+    createdAt?: string;
+}
+
+export interface AttachmentItem {
+    id: string;
+    name: string;
+    url: string;
+    type: "image" | "video" | "document";
+    size: number;
+    createdAt: string;
+}
+
+// --- DASHBOARD & HOMESTATS ---
+
 export interface DashboardKPIs {
+    totalAbertos: number;
+    aguardandoAprovacao: number;
+    concluidos: number;
+    vencidos: number;
+    respostaVencida: number;
+    aVencerHoje: number;
+    meusVencidos: number;
+}
+
+export interface DefaultStats {
     totalAbertos: number;
     aguardandoAprovacao: number;
     concluidos: number;
@@ -32,19 +73,38 @@ export interface ChamadoCritico {
 }
 
 export interface DashboardStatsData {
-    kpis: defaultStats;
+    kpis: DefaultStats;
     filaCritica: ChamadoCritico[];
 }
 
-export interface defaultStats {
-    totalAbertos: number,
-    aguardandoAprovacao: number,
-    concluidos: number,
-    vencidos: number,
-    respostaVencida: number,
-    aVencerHoje: number,
-    meusVencidos: number,
-};
+export interface HomeStats {
+    totalCriadosHoje: number;
+    totalAbertos: number;
+    totalFinalizados: number;
+    atendenteName: string;
+}
+
+export interface FuturosKPIs {
+    totalAbertos: number;
+    aguardandoAprovacao: number;
+    concluidos: number;
+    vencidos: number;
+    respostaVencida: number;
+    aVencerHoje: number;
+    meusVencidos: number;
+}
+
+// --- COMPONENT PROPS ---
+
+export interface ChatWindowProps {
+    id: string;
+}
+
+export interface ChatListProps {
+    atendimentos?: AtendimentoComTipo[] | Atendimento[];
+    atendimentoAtivoId?: string;
+    onSelectChat: (id: string) => void;
+}
 
 export interface KpiProps {
     label: string;
@@ -62,54 +122,12 @@ export interface WidgetProps {
     onHeaderAction?: () => void;
 }
 
-export interface AttachmentItem {
-    id: string;
-    name: string;
-    url: string;
-    type: "image" | "video" | "docuement";
-    size: number;
-    createAt: string;
-}
 export interface MediaAttachmentProps {
     files?: AttachmentItem[];
     onUpload?: (files: FileList, type: "media" | "document") => void;
     onSelectFile?: (file: AttachmentItem) => void;
     mode?: "upload-actions" | "list" | "full";
     className?: string;
-}
-
-export interface HomeStats {
-    totalCriadosHoje: number;
-    totalAbertos: number;
-    totalFinalizados: number;
-    atendenteName: string;
-}
-export interface fututosKPIs {
-    totalAbertos: number;
-    aguardandoAprovacao: number;
-    concluidos: number;
-    vencidos: number;
-    respostaVencida: number;
-    aVencerHoje: number;
-    meusVencidos: number;
-}
-
-export interface ChatListProps {
-    atendimentos?: AtendimentoComTipo[];
-    atendimentoAtivoId?: string;
-    onSelectChat: (id: string) => void;
-}
-
-export type StatusConfig = {
-    badge: string;
-    dot: string;
-};
-
-
-export interface IAtendimentoData {
-    id: string;
-    status: "ABERTO" | "PENDENTE" | "FINALIZADO" | string;
-    createdAt?: string;
 }
 
 export interface ChartProps {
@@ -120,18 +138,7 @@ export interface WelcomeProps {
     nomeAtendente: string;
 }
 
-export interface Mensagem {
-    id: string;
-    atendimentoId: string;
-    texto: string;
-    by: boolean; // true = atendente, false = cliente
-    createdAt: string;
-}
-
-export interface Atendimento {
-    id: string;
-    clienteNome: string;
-    clienteNumero: string;
-    status: string;
-    updatedAt: string;
-}
+export type StatusConfig = {
+    badge: string;
+    dot: string;
+};

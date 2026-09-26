@@ -1,12 +1,12 @@
 'use client';
 
-import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useRealtimeApp } from "@/hooks/useRealtimeApp";
 import { Widget } from "@/components/common/widget";
 import { AlertCircle, Loader2, ArrowUpRight, Newspaper } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function FilaUrgestes() {
-    const { stats, loading } = useDashboardStats();
+    const { dashboardStats, loading } = useRealtimeApp();
     const route = useRouter();
 
     const handleGoToChat = (id: string) => {
@@ -19,9 +19,9 @@ export default function FilaUrgestes() {
                     <div className="p-6 flex justify-center text-gray-400">
                         <Loader2 size={20} className="animate-spin" />
                     </div>
-                ) : stats?.filaCritica && stats.filaCritica.length > 0 ? (
+                ) : dashboardStats?.filaCritica && dashboardStats.filaCritica.length > 0 ? (
                     <ul className="divide-y divide-gray-100">
-                        {stats.filaCritica.map((item) => (
+                        {dashboardStats.filaCritica.map((item) => (
                             <li key={item.id} onClick={() => handleGoToChat(item.id)} className="p-3.5 hover:bg-gray-50/80 transition-colors cursor-pointer group flex items-center justify-between">
                                 <div className="min-w-0 pr-2">
                                     <div className="flex items-center gap-2">
